@@ -59,7 +59,7 @@ async function fetchProducts() {
     try {
         const response = await fetch(`${API_BASE_URL}/products`);
         const products = await response.json();
-        productDatabase = products;
+        productDatabase = [...products];
         return products;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -72,7 +72,7 @@ async function fetchStock() {
     try {
         const response = await fetch(`${API_BASE_URL}/stock`);
         const stock = await response.json();
-        stockDatabase = stock;
+        stockDatabase = [...stock];
         return stock;
     } catch (error) {
         console.error('Error fetching stock:', error);
