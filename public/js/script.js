@@ -71,7 +71,7 @@ async function fetchProducts() {
 async function fetchStock() {
     try {
         const response = await fetch(`${API_BASE_URL}/stock`);
-        let stock = await response.json();
+        const stock = await response.json();
         stockDatabase = [...stock];
         return stock;
     } catch (error) {
