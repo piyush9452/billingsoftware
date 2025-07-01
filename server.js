@@ -485,14 +485,8 @@ app.use((err, req, res, next) => {
     res.status(statusCode).json({ error: err.message || 'Something went wrong!' });
 });
 
-
-// For Vercel deployment - export the app
-module.exports = app;
-
-// Only start server if not in Vercel environment
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    app.listen(PORT, () => {
-        console.log(`Smart Billing System server running on port ${PORT}`);
-        console.log(`Access the application at: http://localhost:${PORT}`);
-    });
-} 
+// Start the server (Render deployment)
+app.listen(PORT, () => {
+    console.log(`Smart Billing System server running on port ${PORT}`);
+    console.log(`Access the application at: http://localhost:${PORT}`);
+}); 
