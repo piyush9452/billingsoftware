@@ -51,9 +51,9 @@ let stockDatabase = [];
 let customerDatabase = [];
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:3000/api';
-API_BASE_URL = 'https://billingsoftware-4mw3.onrender.com/api';
-
+API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000/api'
+  : 'https://billingsoftware-4mw3.onrender.com/api';
 // API Functions
 async function fetchProducts() {
     try {
@@ -71,7 +71,7 @@ async function fetchProducts() {
 async function fetchStock() {
     try {
         const response = await fetch(`${API_BASE_URL}/stock`);
-        const stock = await response.json();
+        let stock = await response.json();
         stockDatabase = [...stock];
         return stock;
     } catch (error) {
@@ -85,7 +85,7 @@ async function fetchCustomers() {
     try {
         const response = await fetch(`${API_BASE_URL}/customers`);
         const customers = await response.json();
-        customerDatabase = customers;
+        customerDatabase = [...customers];
         return customers;
     } catch (error) {
         console.error('Error fetching customers:', error);
