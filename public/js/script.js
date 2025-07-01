@@ -52,6 +52,7 @@ let customerDatabase = [];
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:3000/api';
+API_BASE_URL = 'https://billingsoftware-4mw3.onrender.com/api';
 
 // API Functions
 async function fetchProducts() {
