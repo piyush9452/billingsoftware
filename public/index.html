@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Billing System - Professional Billing Solution</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+</head>
+<body>
+    <!-- Home Page -->
+    <div id="homePage" class="home-page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="logo">Smart Billing</div>
+                
+                <!-- Hamburger Menu Button for Mobile -->
+                <div class="hamburger-menu" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+                <!-- Mobile Menu Overlay -->
+                <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+                <ul class="nav-links">
+                        <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
+                        <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
+                        <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
+                        <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
+                    </ul>
+                    <div class="nav-buttons">
+                        <button class="add-stock-btn" onclick="handleMobileStock()">Stock</button>
+                        <button class="start-billing-btn" onclick="handleMobileStartBilling()">Start Billing</button>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <ul class="nav-links desktop-nav">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="nav-buttons desktop-nav">
+                    <button class="add-stock-btn" onclick="showStock()">Stock</button>
+                <button class="start-billing-btn" onclick="showBillingApp()">Start Billing</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1>Smart Billing Made Simple</h1>
+                    <p>Professional billing system with PDF generation and WhatsApp integration. Streamline your business operations with our modern billing solution.</p>
+                    <div class="hero-buttons">
+                        <button class="btn-primary" onclick="showBillingApp()">Start Billing Now</button>
+                        <a href="#features" class="btn-secondary">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="dashboard-preview">
+                        <div style="width: 300px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                            📊 Billing Dashboard
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="features-container">
+                <div class="section-title">
+                    <h2>Powerful Features</h2>
+                    <p>Everything you need to manage your billing efficiently and professionally</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📄</div>
+                        <h3>PDF Generation</h3>
+                        <p>Generate professional invoices in PDF format with company branding, customer details, and itemized billing information.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>WhatsApp Integration</h3>
+                        <p>Send bills directly to customers via WhatsApp with formatted messages including all purchase details and totals.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <h3>Real-time Calculations</h3>
+                        <p>Automatic calculation of totals, taxes, and discounts with real-time updates as you add or remove items from the bill.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Customer Management</h3>
+                        <p>Store customer information including contact details and purchase history for better customer relationship management.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Modern Interface</h3>
+                        <p>Clean, intuitive design that works seamlessly on desktop and mobile devices with responsive layout and smooth animations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛒</div>
+                        <h3>Stock Management</h3>
+                        <p>Efficiently manage your inventory with our comprehensive stock tracking system for better business control.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="about">
+            <div class="about-container">
+                <div class="section-title">
+                    <h2>About Smart Billing</h2>
+                    <p>Discover our journey and commitment to revolutionizing billing solutions</p>
+                </div>
+                <div class="about-content">
+                    <div class="about-text">
+                        <h3>Our Mission</h3>
+                        <p>At Smart Billing, we are dedicated to simplifying business operations through innovative billing technology. Our mission is to empower businesses of all sizes with efficient, user-friendly tools that enhance productivity and customer satisfaction.</p>
+                        <h3>Our Story</h3>
+                        <p>Founded in 2020, Smart Billing started with a vision to address the complexities of traditional billing systems. Our team of passionate developers and business experts created a platform that integrates PDF generation and WhatsApp communication to streamline invoicing processes.</p>
+                        <h3>Why Choose Us?</h3>
+                        <ul>
+                            <li><strong>Innovation: </strong>smart edge features</li>
+                            <li><strong>Support: </strong>Reliable support</li>
+                            <li><strong>Scalability: </strong> scalable for growth</li>
+                        </ul>
+                        <a href="#contact" class="about-btn">Get in Touch</a>
+                    </div>
+                    <div class="about-visual">
+                        <img class="about-image" src="/images/image1.jpg" alt="Smart Billing Dashboard" width="500" height="650">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats">
+            <div class="stats-container">
+                <div class="stat-item">
+                    <h3>99%</h3>
+                    <p>Accuracy Rate</p>
+                </div>
+                <div class="stat-item">
+                    <h3>50%</h3>
+                    <p>Time Saved</p>
+                </div>
+                <div class="stat-item">
+                    <h3>24/7</h3>
+                    <p>Available</p>
+                </div>
+                <div class="stat-item">
+                    <h3>1000+</h3>
+                    <p>Happy Users</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="cta-container">
+                <h2>Ready to Transform Your Billing?</h2>
+                <p>Join thousands of businesses already using our smart billing system to streamline their operations and improve customer satisfaction.</p>
+                <button class="btn-primary" onclick="showBillingApp()">Get Started Today</button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="contact" class="footer">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>Smart Billing System</h3>
+                        <p>Professional billing solution for modern businesses. Streamline your operations with our advanced features.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Features</h3>
+                        <p><a href="#features">PDF Generation</a></p>
+                        <p><a href="#features">WhatsApp Integration</a></p>
+                        <p><a href="#features">Customer Management</a></p>
+                        <p><a href="#features">Stock Management</a></p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Contact</h3>
+                        <p>Email: info@smartbilling.com</p>
+                        <p>Phone: +91 9876543210</p>
+                        <p>Address: 123 Business Street, City</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>© 2025 Smart Billing System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Billing Application -->
+    <div id="billingApp" class="billing-app">
+        <div class="billing-container">
+            <img src="/images/logo.png" alt="Dip Dips Logo" class="billing-logo">
+            <button class="back-btn" onclick="showHomePage()">← Back to Home</button>
+            
+            <div class="billing-header">
+                <h1>INVOICE</h1>
+                <h2>Dipdips Franchisee: Buddhadeb Mondal (Garg House)</h2>
+            </div>
+
+            <div class="customer-section">
+                <h2>Customer Information</h2>
+                <div class="customer-form">
+                    <div class="form-group">
+                        <label for="customerPhone">WhatsApp Number</label>
+                        <input type="tel" id="customerPhone" placeholder="Enter WhatsApp number" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerName">Customer Name</label>
+                        <input type="text" id="customerName" placeholder="Enter customer name" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="billing-section">
+                <div class="section">
+                    <h2>Add Items</h2>
+                    <div id="addItemForm" class="add-item-form">
+                        <div class="form-group">
+                            <label for="itemName">Item Name</label>
+                            <input type="text" id="itemName" placeholder="Enter item name" autocomplete="off">
+                            <div id="itemNameDropdown" class="autocomplete-dropdown" style="position:relative;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemQuantity">Quantity</label>
+                            <input type="number" id="itemQuantity" value="1" min="1">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn" onclick="addItem()">Submit</button>
+                        </div>
+                    </div>
+                    <div id="addAnotherItemBtn" class="add-another-item" style="display: none;">
+                        <button class="btn btn-primary" onclick="showAddItemForm()">+ Add Another Item</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Bill Items</h2>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>MRP (₹)</th>
+                                <th>Quantity</th>
+                                <th>Total (₹)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be added here -->
+                        </tbody>
+                    </table>
+                    <div class="bill-summary-row" style="display: flex; gap: 2rem; align-items: center; margin: 20px 0 0 0;">
+                        <div class="service-charges-display" style="font-weight: 600;">
+                            Service Charges: ₹<span id="serviceCharges">0.00</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="billDiscount">Discount (₹)</label>
+                            <input type="number" id="billDiscount" value="0" min="0" style="width: 120px;">
+                        </div>
+                    </div>
+                    
+                    <div class="total-section">
+                        <h3>Total Amount: ₹<span id="totalAmount">0.00</span></h3>
+                        <p>Items: <span id="totalItems">0</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-warning" onclick="sendWhatsApp()">Send via WhatsApp</button>
+                <button class="btn btn-danger" onclick="clearAll()">Clear All</button>
+            </div>
+
+            <div id="messages"></div>
+        </div>
+    </div>
+
+    <div id="stockModal" class="modal" style="display:none;">
+        <div class="stock-container">
+            <div class="stock-header">
+                <h1>Stock Management</h1>
+            </div>
+            
+            <!-- Add Stock Form -->
+            <div class="section">
+                <h2>Add New Stock Item</h2>
+                <div id="addStockForm" class="add-stock-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stockItemName">Item Name</label>
+                            <input type="text" id="stockItemName" placeholder="Enter item name">
+                        </div>
+                        <div class="form-group">
+                            <label for="stockBrand">Brand</label>
+                            <input type="text" id="stockBrand" placeholder="Enter brand name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stockMRP">MRP (₹)</label>
+                            <input type="number" id="stockMRP" placeholder="Enter MRP" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="stockPurchasedPrice">Purchased Price (₹)</label>
+                            <input type="number" id="stockPurchasedPrice" placeholder="Enter purchased price" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stockQuantity">Quantity</label>
+                            <input type="number" id="stockQuantity" placeholder="Enter quantity" min="1" value="1">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="addStockItem()">Submit</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stock Table -->
+            <div class="section">
+                <h2>Current Stock</h2>
+                <table class="items-table stock-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Brand</th>
+                            <th>MRP (₹)</th>
+                            <th>Purchased Price (₹)</th>
+                            <th>Quantity</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                        <!-- Stock items will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <span class="close" onclick="closeStock()">&times;</span>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>

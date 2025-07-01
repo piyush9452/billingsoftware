@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Smart Billing Registration</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background:linear-gradient(45deg, #7a6ff0, #d1c4e9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .auth-page {
+        display: none;
+      }
+
+      .auth-container {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        width: 380px;
+        text-align: center;
+      }
+
+      .auth-header h2 {
+        margin-bottom: 10px;
+        color: #5a4fcf;
+        font-size: 1.7rem;
+        font-weight: 700;
+      }
+
+      .auth-header p {
+        color: #555;
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+      }
+
+      .form-group {
+        text-align: left;
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: 0.3s ease;
+      }
+
+      input:focus {
+        border-color: #5a4fcf;
+        outline: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #7ecbfa 0%, #7a6ff0 100%);
+        color: #ffffff;
+        padding: 12px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        width: 40%;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: 0.3s ease;
+        box-shadow: 0 5px 15px rgba(90, 79, 207, 0.3);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(to right, #4a3fcf, #5a6cfb);
+      }
+
+      .auth-switch {
+        margin-top: 20px;
+        font-size: 0.9rem;
+      }
+
+      .auth-switch a {
+        color: #5a4fcf;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .auth-switch a:hover {
+        text-decoration: underline;
+      }
+
+      .messages-container {
+        color: red;
+        margin-top: 15px;
+        font-size: 0.9rem;
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .auth-container {
+          width: 90%;
+          padding: 30px;
+        }
+
+        .auth-header h2 {
+          font-size: 1.5rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+          font-size: 0.95rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .auth-container {
+          padding: 20px;
+        }
+
+        .auth-header h2 {
+          font-size: 1.3rem;
+        }
+
+        .auth-header p {
+          font-size: 0.85rem;
+        }
+
+        .btn-primary {
+          font-size: 0.95rem;
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loginPage" class="auth-page" style="display: block">
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>Welcome to Smart Billing</h2>
+          <p>Log in to your account</p>
+        </div>
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input type="text" id="loginUsername" placeholder="Enter your username" />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" />
+        </div>
+        <button class="btn-primary" onclick="handleLogin()">Login</button>
+        <p class="auth-switch">Don't have an account? <a href="#" onclick="showRegistrationPage()">Register here</a></p>
+        <div id="loginMessages" class="messages-container"></div>
+      </div>
+    </div>
+
+    <div id="registrationPage" class="auth-page">
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>Register for Smart Billing</h2>
+          <p>Create your new account</p>
+        </div>
+        <div class="form-group">
+          <label for="regUsername">Username</label>
+          <input type="text" id="regUsername" placeholder="Choose a username" />
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="Enter your email" />
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" placeholder="Create a password" />
+        </div>
+        <div class="form-group">
+          <label for="regConfirmPassword">Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="Confirm your password" />
+        </div>
+        <button class="btn-primary" onclick="handleRegistration()">Register</button>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+        <div id="registrationMessages" class="messages-container"></div>
+      </div>
+    </div>
+
+    <script src="/script.js"></script>
+  </body>
+</html>
