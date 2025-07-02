@@ -474,6 +474,7 @@ function updateItemsTable() {
     let totalAmount = 0;
     let totalItems = 0;
     items.forEach(item => {
+        console.log('Item id', item.id, typeof item.id);
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${item.name}</td>
@@ -481,7 +482,7 @@ function updateItemsTable() {
             <td>${item.quantity}</td>
             <td>₹${item.total.toFixed(2)}</td>
             <td>
-                <button class="btn-remove" onclick="removeItem(${item.id})">Remove</button>
+                <button class="btn-remove" onclick="removeItem('${item.id}')">Remove</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -772,7 +773,7 @@ async function updateStockTable() {
                 <td>₹${item.purchased_price || '-'}</td>
                 <td>${item.quantity || 0}</td>
                 <td>
-                    <button class="btn-remove" onclick="removeStockItem(${item.id})">Remove</button>
+                    <button class="btn-remove" onclick="removeStockItem('${item.id}')">Remove</button>
             </td>
         `;
             tbody.appendChild(row);
