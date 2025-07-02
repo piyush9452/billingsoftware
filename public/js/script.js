@@ -436,12 +436,13 @@ function addItem() {
     const mrp = product.mrp;
     const total = mrp * quantity;
     const item = {
-        id: Date.now(),
+        id: product._id,
+        // id: Date.now(),
         name: itemName,
         mrp: mrp,
         quantity: quantity,
         total: total,
-        product_id: product.id
+        product_id: product._id
     };
     items.push(item);
     updateItemsTable();
