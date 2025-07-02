@@ -22,6 +22,35 @@ const User = require('./src/models/User');
 const connectDB = require('./src/config/database');
 connectDB();
 
+// Startup check: verify all required collections exist and are accessible
+const REQUIRED_COLLECTIONS = [
+    'customers',
+    'stocks',
+    'products',
+    'bills',
+    'billitems',
+    'stocktransactions',
+    'users'
+];
+
+async function checkCollections() {
+    try {
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        const collectionNames = collections.map(c => c.name.toLowerCase());
+        for (const required of REQUIRED_COLLECTIONS) {
+            if (collectionNames.includes(required)) {
+                console.log(`[Startup Check] Collection '${required}' exists and is accessible.`);
+            } else {
+                console.error(`[Startup Check] Collection '${required}' is MISSING or not accessible!`);
+            }
+        }
+    } catch (err) {
+        console.error('[Startup Check] Error checking collections:', err.message);
+    }
+}
+
+mongoose.connection.once('open', checkCollections);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
