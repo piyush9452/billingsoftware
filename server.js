@@ -58,9 +58,9 @@ const PORT = process.env.PORT || 3000;
 // app.use(cors());
 app.use(cors({
     origin:process.env.CORS_ORIGIN,
-}
-   
+}  
 ));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -95,6 +95,7 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
+        console.log("user:",user);
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -163,7 +164,10 @@ app.get('/api/stock', async (req, res) => {
     try {
         const stock = await Stock.find({}).populate('product_id', 'id name brand mrp purchased_price');
         // The frontend expects a flat structure, let's provide it
-        const flatStock = stock.map(s => ({
+        // const flatStock = stock.map(s => ({
+            const flatStock = stock
+            .filter(s => s.product_id) 
+            .map(s => ({
             id: s.product_id._id,
             name: s.product_id.name,
             brand: s.product_id.brand,
@@ -177,7 +181,6 @@ app.get('/api/stock', async (req, res) => {
         res.status(500).json({ error: 'Database error while fetching stock' });
     }
 });
-
 
 app.post('/api/stock', authenticateToken, async (req, res) => {
     const { product_id, quantity, min_quantity, notes } = req.body;
@@ -196,6 +199,21 @@ app.post('/api/stock', authenticateToken, async (req, res) => {
         res.json({ message: 'Stock updated successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Database error while updating stock' });
+    }
+});
+
+app.delete('/api/stock/:id', authenticateToken, async (req, res) => {
+    try {
+        const productId = req.params.id;
+        // const stock = await Stock.findOneAndDelete({ product_id: productId });
+        const stock =   await Product.findByIdAndDelete(productId);
+        if (!stock) {
+            return res.status(404).json({ error: 'Stock item not found' });
+        }
+        await StockTransaction.deleteMany({ product_id: productId });
+        res.json({ message: 'Stock item deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Database error while deleting stock item' });
     }
 });
 
@@ -257,7 +275,15 @@ app.get('/api/bills/:id', async (req, res) => {
 });
 
 app.post('/api/bills', async (req, res) => {
-    const { customer_phone, customer_name, items, total_amount, total_items, notes } = req.body;
+    const { customer_phone, customer_name, items, total_amount, total_items, notes, service_charges, discount } = req.body;
+
+    // Calculate sum of item totals
+    const itemsTotal = items.reduce((sum, item) => sum + (item.price || item.total), 0);
+    const serviceCharge = service_charges || 0;
+    const Discount = req.body.discount || 0;
+
+    // Calculate the correct total amount
+    const totalAmount = itemsTotal + serviceCharge - Discount;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -292,6 +318,7 @@ app.post('/api/bills', async (req, res) => {
             total_items,
             notes,
             bill_date: now.toDate(),
+            service_charges: service_charges || 0 ,
         };
 
         const createdBillArr = await Bill.create([billData], { session });
@@ -305,7 +332,9 @@ app.post('/api/bills', async (req, res) => {
                 product_name: item.name,
                 quantity: item.quantity,
                 mrp: item.mrp,
-                total: item.price || item.total,
+                discount: discount || 0,
+                service_charges : service_charges || 0,
+                total: totalAmount || item.price || item.total,
             }], { session });
 
             const stock = await Stock.findOne({ product_id: productId }).session(session);
@@ -340,6 +369,8 @@ app.post('/api/bills', async (req, res) => {
         session.endSession();
     }
 });
+
+
 
 
 // PDF Generation (assuming data structure is similar)

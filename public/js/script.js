@@ -121,6 +121,7 @@ async function createBill(billData) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                
             },
             body: JSON.stringify(billData)
         });
@@ -133,10 +134,12 @@ async function createBill(billData) {
 
 async function addStockItemAPI(stockData) {
     try {
+        const token = localStorage.getItem('token'); 
         const response = await fetch(`${API_BASE_URL}/stock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(stockData)
         });
@@ -161,10 +164,12 @@ async function addStockItem() {
     
     try {
         // First add the product
+        const token = localStorage.getItem('token'); 
         const productResponse = await fetch(`${API_BASE_URL}/products`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: itemName,
@@ -481,7 +486,7 @@ function updateItemsTable() {
             <td>${item.quantity}</td>
             <td>₹${item.total.toFixed(2)}</td>
             <td>
-                <button class="btn-remove" onclick="removeItem(${item.id})">Remove</button>
+                <button class="btn-remove" onclick="removeItem('${item.id}')">Remove</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -772,7 +777,7 @@ async function updateStockTable() {
                 <td>₹${item.purchased_price || '-'}</td>
                 <td>${item.quantity || 0}</td>
                 <td>
-                    <button class="btn-remove" onclick="removeStockItem(${item.id})">Remove</button>
+                    <button class="btn-remove" onclick="removeStockItem('${item.id}')">Remove</button>
             </td>
         `;
             tbody.appendChild(row);
@@ -783,11 +788,26 @@ async function updateStockTable() {
     }
 }
 
-function removeStockItem(id) {
+async function removeStockItem(id) {
     if (confirm('Are you sure you want to remove this item?')) {
-        // In a real application, you would call an API to delete the item
-        showMessage('Item removed successfully', 'success');
-        updateStockTable();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/stock/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                showMessage('Item removed successfully', 'success');
+                await updateStockTable();
+            } else {
+                const result = await response.json();
+                showMessage(result.error || 'Failed to remove item', 'error');
+            }
+        } catch (error) {
+            showMessage('Error removing item', 'error');
+        }
     }
 }
 
