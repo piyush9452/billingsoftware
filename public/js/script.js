@@ -479,6 +479,7 @@ function updateItemsTable() {
     let totalAmount = 0;
     let totalItems = 0;
     items.forEach(item => {
+        console.log('Item id', item.id, typeof item.id);
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${item.name}</td>
