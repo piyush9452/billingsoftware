@@ -95,7 +95,6 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
-        console.log("user:",user);
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -147,7 +146,7 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-app.post('/api/products', authenticateToken, async (req, res) => {
+app.post('/api/products',  async (req, res) => {
     const { name, brand, mrp, purchased_price, description, category } = req.body;
     try {
         const product = await Product.create({ name, brand, mrp, purchased_price, description, category });
@@ -182,7 +181,7 @@ app.get('/api/stock', async (req, res) => {
     }
 });
 
-app.post('/api/stock', authenticateToken, async (req, res) => {
+app.post('/api/stock',  async (req, res) => {
     const { product_id, quantity, min_quantity, notes } = req.body;
     try {
         await Stock.findOneAndUpdate(
@@ -202,7 +201,7 @@ app.post('/api/stock', authenticateToken, async (req, res) => {
     }
 });
 
-app.delete('/api/stock/:id', authenticateToken, async (req, res) => {
+app.delete('/api/stock/:id',  async (req, res) => {
     try {
         const productId = req.params.id;
         // const stock = await Stock.findOneAndDelete({ product_id: productId });

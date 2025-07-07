@@ -134,12 +134,12 @@ async function createBill(billData) {
 
 async function addStockItemAPI(stockData) {
     try {
-        const token = localStorage.getItem('token'); 
+        // const token = localStorage.getItem('token'); 
         const response = await fetch(`${API_BASE_URL}/stock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                // 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(stockData)
         });
@@ -162,14 +162,20 @@ async function addStockItem() {
         return;
     }
     
+    // Check if user is authenticated
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //     showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
+    //     return;
+    // }
+    
     try {
         // First add the product
-        const token = localStorage.getItem('token'); 
         const productResponse = await fetch(`${API_BASE_URL}/products`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                // 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: itemName,
@@ -178,6 +184,11 @@ async function addStockItem() {
                 purchased_price: purchasedPrice
             })
         });
+        
+        if (!productResponse.ok) {
+            const errorData = await productResponse.json();
+            throw new Error(errorData.error || 'Failed to add product');
+        }
         
         const productResult = await productResponse.json();
         
@@ -195,7 +206,7 @@ async function addStockItem() {
         }
     } catch (error) {
         console.error('Error adding stock item:', error);
-        showMessage('Error adding stock item', 'error');
+        showMessage(`Error adding stock item: ${error.message}`, 'error');
     }
 }
 
@@ -792,12 +803,12 @@ async function updateStockTable() {
 async function removeStockItem(id) {
     if (confirm('Are you sure you want to remove this item?')) {
         try {
-            const token = localStorage.getItem('token');
+            // const token = localStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stock/${id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                // headers: {
+                //     'Authorization': `Bearer ${token}`
+                // }
             });
             if (response.ok) {
                 showMessage('Item removed successfully', 'success');
