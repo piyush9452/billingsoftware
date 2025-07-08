@@ -570,11 +570,11 @@ async function sendWhatsApp() {
         message += `Invoice Number: *${invoiceNumber}*\n\n`;
         message += `Dear ${customerName || 'Customer'},\n`;
         message += `Here's your INVOICE from Buddhadeb Mondal (Franchisee- Dipdips)\n\n`;
-    message += `*Items Purchased:*\n`;
+        message += `*Items Purchased:*\n`;
         message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
         message += `Item Name          Qty  Price   Subtotal  Total\n`;
         message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    items.forEach(item => {
+        items.forEach(item => {
             const itemName = item.name.length > 15 ? item.name.substring(0, 12) + '...' : item.name.padEnd(15);
             const qty = item.quantity.toString().padStart(3);
             const price = `₹${item.mrp.toFixed(2)}`.padStart(8);
@@ -587,10 +587,10 @@ async function sendWhatsApp() {
         if (billDiscount > 0) {
             message += `Discount: -₹${billDiscount.toFixed(2)}\n`;
         }
-    message += `*Total Amount: ₹${totalAmount.toFixed(2)}*\n\n`;
-    message += `Thank you for your purchase!\n\n`;
+        message += `*Total Amount: ₹${totalAmount.toFixed(2)}*\n\n`;
+        message += `Thank you for your purchase!\n\n`;
         message += `Regards\n`;
-        message += `Franchisee Name\n`;
+        message += `*Franchisee: Buddhadeb Mondal (Garg House)*\n`;
         message += `*DipDips: Real Food, Really Fast*\n`;
         message += `Powered by SIMTRAK`;
         const whatsappUrl = `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
