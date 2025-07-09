@@ -162,19 +162,18 @@ app.post('/api/products',  async (req, res) => {
 app.get('/api/stock', async (req, res) => {
     try {
         const stock = await Stock.find({}).populate('product_id', 'id name brand mrp purchased_price');
-        // The frontend expects a flat structure, let's provide it
-        // const flatStock = stock.map(s => ({
-            const flatStock = stock
-            .filter(s => s.product_id) 
+        const flatStock = stock
+            .filter(s => s.product_id)
             .map(s => ({
-            id: s.product_id._id,
-            name: s.product_id.name,
-            brand: s.product_id.brand,
-            mrp: s.product_id.mrp,
-            purchased_price: s.product_id.purchased_price,
-            quantity: s.quantity,
-            min_quantity: s.min_quantity
-        }));
+                stock_id: s._id,
+                product_id: s.product_id._id,
+                name: s.product_id.name,
+                brand: s.product_id.brand,
+                mrp: s.product_id.mrp,
+                purchased_price: s.product_id.purchased_price,
+                quantity: s.quantity,
+                min_quantity: s.min_quantity
+            }));
         res.json(flatStock);
     } catch (err) {
         res.status(500).json({ error: 'Database error while fetching stock' });
@@ -213,6 +212,34 @@ app.delete('/api/stock/:id',  async (req, res) => {
         res.json({ message: 'Stock item deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Database error while deleting stock item' });
+    }
+});
+
+// PATCH /api/stock/:id/add - increment stock quantity
+app.patch('/api/stock/:id/add', async (req, res) => {
+    const stockId = req.params.id;
+    const addQty = Number(req.body.add_quantity);
+    if (isNaN(addQty)) {
+        return res.status(400).json({ error: 'add_quantity must be a number' });
+    }
+    try {
+        const stock = await Stock.findByIdAndUpdate(
+            stockId,
+            { $inc: { quantity: addQty } },
+            { new: true }
+        );
+        if (!stock) {
+            return res.status(404).json({ error: 'Stock item not found' });
+        }
+        await StockTransaction.create({
+            product_id: stock.product_id,
+            transaction_type: 'stock_add',
+            quantity: addQty,
+            notes: 'Stock incremented via API'
+        });
+        res.json({ message: 'Stock quantity incremented', stock });
+    } catch (err) {
+        res.status(500).json({ error: 'Database error while incrementing stock' });
     }
 });
 
