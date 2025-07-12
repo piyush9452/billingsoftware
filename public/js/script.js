@@ -394,39 +394,105 @@ function updateActiveCustomerOption(options) {
 }
 
 // Navigation Functions
+// --- Navigation Section Logic ---
+function hideAllSections() {
+    document.getElementById('homePage').style.display = 'none';
+    document.getElementById('billingApp').style.display = 'none';
+    document.getElementById('customerDataSection').style.display = 'none';
+    document.getElementById('salesReportSection').style.display = 'none';
+    document.getElementById('stockSection').style.display = 'none';
+    // Scroll to top and prevent body scrolling issues
+    window.scrollTo(0, 0);
+    document.body.style.overflow = 'auto';
+    document.body.style.position = '';
+    document.body.style.width = '';
+}
+
+function showCustomerData() {
+    hideAllSections();
+    document.getElementById('customerDataSection').style.display = 'block';
+    fetchAndDisplayCustomerData();
+    document.body.style.background = 'var(--primary-purple)';
+    document.body.style.minHeight = '100vh';
+    window.scrollTo(0, 0);
+}
+
+function showSalesReport() {
+    hideAllSections();
+    document.getElementById('salesReportSection').style.display = 'block';
+    fetchAndDisplaySalesReport();
+    document.body.style.background = 'var(--primary-purple)';
+    document.body.style.minHeight = '100vh';
+    window.scrollTo(0, 0);
+}
+
 function showBillingApp() {
-    closeMobileMenu();
-    
-    const homePage = document.getElementById('homePage');
-    const billingApp = document.getElementById('billingApp');
-    
-    if (homePage && billingApp) {
-        homePage.classList.add('hidden');
-        billingApp.classList.add('active');
-        
+    hideAllSections();
+    document.getElementById('billingApp').style.display = 'block';
         document.body.style.background = 'var(--primary-purple)';
         document.body.style.minHeight = '100vh';
         document.body.style.padding = '20px';
-        
         if (window.innerWidth <= 768) {
             document.body.style.overflow = 'auto';
             window.scrollTo(0, 0);
         }
+    updateItemsTable();
+    window.scrollTo(0, 0);
+}
+
+function showStock() {
+    hideAllSections();
+    document.getElementById('stockSection').style.display = 'block';
+    updateStockTable();
+    document.body.style.background = 'var(--primary-purple)';
+    document.body.style.minHeight = '100vh';
+    window.scrollTo(0, 0);
+    // Set default state - show Add Item section, hide Add New Stock section
+    document.getElementById('addItemSection').style.display = 'block';
+    document.getElementById('addNewStockSection').style.display = 'none';
+    document.getElementById('toggleStockSection').textContent = 'Add New Stock';
+    // Auto-set date fields to today
+    const today = new Date().toISOString().split('T')[0];
+    if (document.getElementById('stockDate')) document.getElementById('stockDate').value = today;
+    if (document.getElementById('existingStockDate')) document.getElementById('existingStockDate').value = today;
+    // Populate item name dropdown dynamically
+    const itemNameDropdown = document.getElementById('existingStockItemName');
+    if (itemNameDropdown) {
+        itemNameDropdown.innerHTML = '';
+        productDatabase.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.name;
+            option.textContent = product.name;
+            itemNameDropdown.appendChild(option);
+        });
+    }
+}
+
+function toggleStockSections() {
+    const addItemSection = document.getElementById('addItemSection');
+    const addNewStockSection = document.getElementById('addNewStockSection');
+    const toggleButton = document.getElementById('toggleStockSection');
+    const today = new Date().toISOString().split('T')[0];
+    if (addItemSection.style.display === 'none') {
+        addItemSection.style.display = 'block';
+        addNewStockSection.style.display = 'none';
+        toggleButton.textContent = 'Add New Item';
+        if (document.getElementById('existingStockDate')) document.getElementById('existingStockDate').value = today;
+    } else {
+        addItemSection.style.display = 'none';
+        addNewStockSection.style.display = 'block';
+        toggleButton.textContent = 'Add Stock';
+        if (document.getElementById('stockDate')) document.getElementById('stockDate').value = today;
     }
 }
 
 function showHomePage() {
-    const homePage = document.getElementById('homePage');
-    const billingApp = document.getElementById('billingApp');
-    
-    if (homePage && billingApp) {
-        homePage.classList.remove('hidden');
-        billingApp.classList.remove('active');
-        
+    hideAllSections();
+    document.getElementById('homePage').style.display = 'block';
         document.body.style.background = '';
         document.body.style.minHeight = '';
         document.body.style.padding = '';
-    }
+    window.scrollTo(0, 0);
 }
 
 // Billing Functions
@@ -563,38 +629,44 @@ async function sendWhatsApp() {
         // Generate WhatsApp message
         const currentDate = new Date();
         const formattedDate = currentDate.toLocaleDateString('en-GB');
-        const invoiceNumber = billResult.bill_number;
-        let message = `*DIPDIPS INVOICE*\n`;
-        message += `*Franchisee: Buddhadeb Mondal (Garg House)*\n\n`;
+        // Invoice number format: DD-0001/2025-26/07-0096
+        let invoiceNumber = '';
+        if (billResult.bill_number) {
+            // bill_number is like DIP/2025-26/07-0096
+            // Convert to DD-0001/2025-26/07-0096
+            invoiceNumber = billResult.bill_number.replace('DIP', 'DD-0001');
+        }
+        let message = `DIPDIPS INVOICE\n`;
+        message += `Franchisee: Buddhadeb Mondal (Garg House)\n\n`;
         message += `Invoice Date: ${formattedDate}\n`;
-        message += `Invoice Number: *${invoiceNumber}*\n\n`;
+        message += `Invoice Number: ${invoiceNumber}\n\n`;
         message += `Dear ${customerName || 'Customer'},\n`;
         message += `Here's your INVOICE from Buddhadeb Mondal (Franchisee- Dipdips)\n\n`;
-        message += `*Items Purchased:*\n`;
-        message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
-        message += `Item Name          Qty  Price   Subtotal  Total\n`;
-        message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `Items Purchased:\n`;
+        message += `━━━━━━━━━━━━━━━\n`;
+        message += `Item         Qty  Price  Subtotal\n`;
+        message += `━━━━━━━━━━━━━━━\n`;
         items.forEach(item => {
-            const itemName = item.name.length > 15 ? item.name.substring(0, 12) + '...' : item.name.padEnd(15);
-            const qty = item.quantity.toString().padStart(3);
-            const price = `₹${item.mrp.toFixed(2)}`.padStart(8);
-            const subtotal = `₹${(item.mrp * item.quantity).toFixed(2)}`.padStart(10);
-            const total = `₹${item.total.toFixed(0)}`.padStart(5);
-            message += `${itemName}    ${qty}  ${price}   ${subtotal}  ${total}\n`;
+            // Item name max 15 chars, no ellipsis, no padding if not needed
+            const itemName = item.name.length > 15 ? item.name.substring(0, 15) : item.name;
+            const qty = item.quantity;
+            const price = `₹${item.mrp.toFixed(2)}`;
+            const subtotal = `₹${(item.mrp * item.quantity).toFixed(2)}`;
+            message += `${itemName}${' '.repeat(15 - itemName.length)}${qty} ${price} ${subtotal}\n`;
         });
-        message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `━━━━━━━━━━━━━━━\n`;
         message += `Service Charges: ₹${serviceCharge.toFixed(2)}\n`;
         if (billDiscount > 0) {
             message += `Discount: -₹${billDiscount.toFixed(2)}\n`;
         }
-        message += `*Total Amount: ₹${totalAmount.toFixed(2)}*\n\n`;
+        message += `Total Amount: ₹${totalAmount.toFixed(2)}\n\n`;
         message += `Thank you for your purchase!\n\n`;
         message += `Regards\n`;
-        message += `*Franchisee: Buddhadeb Mondal (Garg House)*\n`;
-        message += `*DipDips: Real Food, Really Fast*\n`;
+        message += `Buddhadeb Mondal (Garg House)\n`;
+        message += `DipDips: Real Food, Really Fast\n`;
         message += `Powered by SIMTRAK`;
         const whatsappUrl = `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+        window.open(whatsappUrl, '_blank');
         showMessage('Bill created and WhatsApp opened successfully!', 'success');
         setTimeout(() => { clearAll(); }, 2000);
     } catch (error) {
@@ -622,8 +694,13 @@ function showMessage(message, type) {
 // Smooth scrolling for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#' || !href || href === '') {
+            e.preventDefault(); // Prevent jump for #
+            return;
+        }
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        const target = document.querySelector(href);
         if (target) {
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -746,32 +823,18 @@ function handleMobileStartBilling() {
     }, 100);
 }
 
-function handleMobileStock() {
+function handleMobileCustomerData() {
     closeMobileMenu();
     setTimeout(() => {
-        showStock();
+        showCustomerData();
     }, 100);
 }
 
-function showStock() {
-    const stockModal = document.getElementById('stockModal');
-    const stockTableBody = document.getElementById('stockTableBody');
-    
-    if (!stockModal || !stockTableBody) {
-        showMessage('Stock modal elements not found.', 'error');
-        return;
-    }
-    
-    // Update stock table
-    updateStockTable();
-    
-    // Show the modal
-    stockModal.style.display = 'flex';
-    
-    // Prevent background scrolling
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
+function handleMobileSalesReport() {
+    closeMobileMenu();
+    setTimeout(() => {
+        showSalesReport();
+    }, 100);
 }
 
 async function updateStockTable() {
@@ -831,14 +894,253 @@ function clearStockForm() {
     document.getElementById('stockQuantity').value = '1';
 }
 
-function closeStock() {
-    const stockModal = document.getElementById('stockModal');
-    if (stockModal) {
-        stockModal.style.display = 'none';
+// --- Fetch and Populate Customer Data ---
+async function fetchAndDisplayCustomerData() {
+    try {
+        // Fetch all customers
+        const customers = await fetch(`${API_BASE_URL}/customers`).then(r => r.json());
+        // Fetch all bills to get last purchase date
+        const bills = await fetch(`${API_BASE_URL}/bills`).then(r => r.json());
+        // Map phone to last purchase date
+        const lastPurchaseMap = {};
+        bills.forEach(bill => {
+            if (bill.customer_phone) {
+                const prev = lastPurchaseMap[bill.customer_phone];
+                const billDate = bill.bill_date || bill.created_at;
+                if (!prev || new Date(billDate) > new Date(prev)) {
+                    lastPurchaseMap[bill.customer_phone] = billDate;
+                }
+            }
+        });
+        // Populate table
+        const tbody = document.getElementById('customerDataTableBody');
+        tbody.innerHTML = '';
+        customers.forEach(cust => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${cust.name || ''}</td>
+                <td>${cust.phone || ''}</td>
+                <td>${lastPurchaseMap[cust.phone] ? new Date(lastPurchaseMap[cust.phone]).toLocaleDateString() : '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        showMessage('Error loading customer data', 'error');
+    }
+}
+
+// --- Fetch and Populate Sales Report ---
+async function fetchAndDisplaySalesReport() {
+    try {
+        const sales = await fetch(`${API_BASE_URL}/reports/sales`).then(r => r.json());
+        const tbody = document.getElementById('salesReportTableBody');
+        tbody.innerHTML = '';
+        sales.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.date}</td>
+                <td>${row.total_bills}</td>
+                <td>₹${row.total_sales.toFixed(2)}</td>
+                <td>${row.total_items_sold}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        showMessage('Error loading sales report', 'error');
+    }
+}
+
+// Update addStockItem to send all new fields
+async function addStockItem() {
+    const itemName = document.getElementById('stockItemName').value.trim();
+    const brand = document.getElementById('stockBrand').value.trim();
+    const mrp = parseFloat(document.getElementById('stockMRP').value) || 0;
+    const purchasedPrice = parseFloat(document.getElementById('stockPurchasedPrice').value) || 0;
+    const quantity = parseInt(document.getElementById('stockQuantity').value) || 1;
+    
+    if (!itemName || !mrp) {
+        showMessage('Please fill all required fields', 'error');
+        return;
+    }
+    
+    // Check if user is authenticated
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //     showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
+    //     return;
+    // }
+    
+    try {
+        // First add the product
+        const productResponse = await fetch(`${API_BASE_URL}/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: itemName,
+                brand: brand,
+                mrp: mrp,
+                purchased_price: purchasedPrice
+            })
+        });
         
-        // Restore background scrolling
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
+        if (!productResponse.ok) {
+            const errorData = await productResponse.json();
+            throw new Error(errorData.error || 'Failed to add product');
+        }
+        
+        const productResult = await productResponse.json();
+        
+        if (productResult.id) {
+            // Then update stock
+            await addStockItemAPI({
+                product_id: productResult.id,
+                quantity: quantity
+            });
+            
+            showMessage('Stock item added successfully', 'success');
+            clearStockForm();
+            await updateStockTable();
+            await fetchProducts(); // Refresh product database
+        }
+    } catch (error) {
+        console.error('Error adding stock item:', error);
+        showMessage(`Error adding stock item: ${error.message}`, 'error');
+    }
+}
+
+// Update addQuantityToExistingStock to send all new fields
+async function addQuantityToExistingStock() {
+    const itemName = document.getElementById('existingStockItemName').value;
+    const vendor = document.getElementById('existingStockVendor').value;
+    const mrp = parseFloat(document.getElementById('existingStockMRP').value) || 0;
+    const purchasePrice = parseFloat(document.getElementById('existingStockPurchasePrice').value) || 0;
+    const invoice = document.getElementById('existingStockInvoice').value.trim();
+    const date = document.getElementById('existingStockDate').value;
+    const brand = document.getElementById('existingStockBrand').value.trim();
+    const quantity = parseInt(document.getElementById('existingStockAddQuantity').value) || 1;
+    if (!itemName || !mrp) {
+        showMessage('Please fill all required fields', 'error');
+        return;
+    }
+    try {
+        // Find product by name
+        const product = productDatabase.find(p => p.name === itemName);
+        if (!product) {
+            showMessage('Product not found', 'error');
+            return;
+        }
+        await addStockItemAPI({
+            product_id: product._id,
+            quantity: quantity,
+            vendor: vendor,
+            invoice: invoice,
+            date: date,
+            brand: brand,
+            mrp: mrp,
+            purchased_price: purchasePrice
+        });
+        showMessage('Stock quantity updated successfully', 'success');
+        clearStockForm();
+        await updateStockTable();
+    } catch (error) {
+        console.error('Error updating stock quantity:', error);
+        showMessage(`Error updating stock: ${error.message}`, 'error');
+    }
+}
+
+// --- Add New Stock Stepper Logic ---
+document.addEventListener('DOMContentLoaded', function() {
+    const nextBtn = document.getElementById('nextToConsumablesBtn');
+    const backBtn = document.getElementById('backToProductBtn');
+    const step1 = document.getElementById('addStockFormStep1');
+    const step2 = document.getElementById('addStockFormStep2');
+    const submitBtn = document.getElementById('submitNewStockBtn');
+
+    if (nextBtn && backBtn && step1 && step2) {
+        nextBtn.onclick = function() {
+            // Optionally validate step 1 fields here
+            step1.style.display = 'none';
+            step2.style.display = 'block';
+        };
+        backBtn.onclick = function() {
+            step2.style.display = 'none';
+            step1.style.display = 'block';
+        };
+        step2.onsubmit = function(e) {
+            e.preventDefault();
+            addStockItemWithConsumables();
+        };
+    }
+});
+
+async function addStockItemWithConsumables() {
+    // Product fields
+    const itemName = document.getElementById('stockItemName').value.trim();
+    const brand = document.getElementById('stockBrand').value.trim();
+    const mrp = parseFloat(document.getElementById('stockMRP').value) || 0;
+    const purchasedPrice = parseFloat(document.getElementById('stockPurchasedPrice').value) || 0;
+    const quantity = parseInt(document.getElementById('stockQuantity').value) || 1;
+    const vendor = document.getElementById('stockVendor').value;
+    const invoice = document.getElementById('stockInvoice').value.trim();
+    const date = document.getElementById('stockDate').value;
+    // Consumables
+    const consumables = {
+        glass_150ml: parseInt(document.getElementById('consumableGlass').value) || 0,
+        spoon: parseInt(document.getElementById('consumableSpoon').value) || 0,
+        stirrer: parseInt(document.getElementById('consumableStirrer').value) || 0,
+        napkin: parseInt(document.getElementById('consumableNapkin').value) || 0,
+        foil_small: parseInt(document.getElementById('consumableFoilSmall').value) || 0,
+        foil_big: parseInt(document.getElementById('consumableFoilBig').value) || 0
+    };
+    if (!itemName || !mrp) {
+        showMessage('Please fill all required fields', 'error');
+        return;
+    }
+    try {
+        // Add product with consumables
+        const productResponse = await fetch(`${API_BASE_URL}/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: itemName,
+                brand: brand,
+                mrp: mrp,
+                purchased_price: purchasedPrice,
+                vendor: vendor,
+                invoice: invoice,
+                date: date,
+                consumables: consumables
+            })
+        });
+        if (!productResponse.ok) {
+            const errorData = await productResponse.json();
+            throw new Error(errorData.error || 'Failed to add product');
+        }
+        const productResult = await productResponse.json();
+        if (productResult.id) {
+            // Then update stock
+            await addStockItemAPI({
+                product_id: productResult.id,
+                quantity: quantity,
+                vendor: vendor,
+                invoice: invoice,
+                date: date
+            });
+            showMessage('Stock item added successfully', 'success');
+            clearStockForm();
+            await updateStockTable();
+            await fetchProducts(); // Refresh product database
+            // Reset stepper
+            document.getElementById('addStockFormStep1').style.display = 'block';
+            document.getElementById('addStockFormStep2').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error adding stock item:', error);
+        showMessage(`Error adding stock item: ${error.message}`, 'error');
     }
 }

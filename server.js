@@ -181,7 +181,7 @@ app.get('/api/stock', async (req, res) => {
 });
 
 app.post('/api/stock',  async (req, res) => {
-    const { product_id, quantity, min_quantity, notes } = req.body;
+    const { product_id, quantity, min_quantity, notes, vendor, invoice, date, brand, mrp, purchased_price } = req.body;
     try {
         await Stock.findOneAndUpdate(
             { product_id: product_id },
@@ -192,7 +192,13 @@ app.post('/api/stock',  async (req, res) => {
             product_id,
             transaction_type: 'stock_update',
             quantity: quantity,
-            notes: notes || 'Stock updated via API'
+            notes: notes || 'Stock updated via API',
+            vendor,
+            invoice,
+            date,
+            brand,
+            mrp,
+            purchased_price
         });
         res.json({ message: 'Stock updated successfully' });
     } catch (err) {

@@ -53,20 +53,29 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0 2rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 1rem;
     position: relative;
+    min-height: 70px;
 }
 
 .logo {
+    display: flex;
+    align-items: center;
     font-size: 1.8rem;
     font-weight: bold;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     white-space: nowrap;
     z-index: 1001;
+}
+
+.logo img {
+    height: 120px;
+    max-height: 15vw;
+    width: auto;
+    max-width: 320px;
+    object-fit: contain;
+    display: block;
+    /* margin-right: 2rem; */
 }
 
 /* Hamburger Menu */
@@ -141,12 +150,12 @@ body {
 }
 
 .mobile-menu-overlay .nav-links a {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: var(--text-dark);
     text-decoration: none;
     transition: color 0.3s ease;
-    padding: 1rem 2rem;
+    padding: 0.8rem 1.5rem;
     border-radius: 10px;
     display: block;
 }
@@ -166,8 +175,8 @@ body {
 
 .mobile-menu-overlay .nav-buttons button {
     width: 100%;
-    padding: 15px 30px;
-    font-size: 1.1rem;
+    padding: 12px 24px;
+    font-size: 1rem;
     border-radius: 50px;
     border: none;
     font-weight: 600;
@@ -183,8 +192,19 @@ body {
 .nav-links {
     display: flex;
     list-style: none;
-    gap: 2rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    margin-left: 2rem;
+}
+
+.nav-links li {
+    display: flex;
     align-items: center;
 }
 
@@ -192,9 +212,42 @@ body {
     text-decoration: none;
     color: var(--text-dark);
     font-weight: 500;
-    transition: color 0.3s ease;
+    transition: color 0.3s, background 0.3s, box-shadow 0.3s, transform 0.2s;
     position: relative;
     white-space: nowrap;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-size: 1rem;
+    margin: 0 0.1rem;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+}
+
+.nav-links a.customer-data-btn,
+.nav-links a.sales-report-btn,
+.nav-links a.add-stock-btn,
+.nav-links a.start-billing-btn {
+    background: var(--primary-gradient);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    margin: 0 0.1rem;
+    transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+
+.nav-links a.customer-data-btn:hover,
+.nav-links a.sales-report-btn:hover,
+.nav-links a.add-stock-btn:hover,
+.nav-links a.start-billing-btn:hover {
+    background: var(--accent-gradient);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--shadow-medium);
+    transform: translateY(-2px) scale(1.04);
 }
 
 .nav-links a:hover {
@@ -218,9 +271,14 @@ body {
 
 .nav-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+    margin-left: auto;
+    margin-right: 0;
+    padding: 0.5rem 0;
 }
 
 .start-billing-btn, .add-stock-btn {
@@ -1183,7 +1241,21 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 992px) {
     .nav-links {
-        gap: 1.5rem;
+        justify-content: center;
+        gap: 0.3rem;
+        margin-left: 0;
+    }
+    .nav-links a,
+    .nav-links a.customer-data-btn,
+    .nav-links a.sales-report-btn,
+    .nav-links a.add-stock-btn,
+    .nav-links a.start-billing-btn {
+        font-size: 0.98rem;
+        padding: 10px 12px;
+    }
+    .logo img {
+        height: 90px;
+        max-width: 220px;
     }
     
     .hero-container {
@@ -1420,6 +1492,11 @@ input:focus, select:focus, textarea:focus {
         font-size: 1.4rem;
     }
     
+    .logo img {
+        height: 80px;
+        max-width: 200px;
+    }
+    
     .hamburger-menu {
         width: 28px;
         height: 22px;
@@ -1530,253 +1607,6 @@ input:focus, select:focus, textarea:focus {
     
     .section {
         padding: 15px;
-    }
-    
-    .billing-logo {
-        width: 80px;
-        top: 10px;
-        right: 10px;
-    }
-    
-    .billing-header {
-        padding-top: 10px;
-    }
-    
-    .stock-container {
-        padding: 10px;
-        width: 98vw;
-        max-height: 98vh;
-    }
-    
-    .stock-table {
-        font-size: 0.75rem;
-    }
-    
-    .stock-table th, .stock-table td {
-        padding: 8px 4px;
-    }
-    
-    #addStockForm {
-        flex-direction: column;
-    }
-    
-    #addStockForm input {
-        margin-bottom: 10px;
-    }
-    
-    .add-another-item {
-        padding: 12px;
-    }
-    
-    .add-another-item .btn {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        max-width: 200px;
-    }
-}
-
-@media (max-width: 480px) {
-    .nav-links {
-        display: none;
-    }
-    
-    /* Mobile navigation for very small screens */
-    .nav-container {
-        padding: 0 0.8rem;
-        height: 65px;
-    }
-    
-    .logo {
-        font-size: 1.3rem;
-    }
-    
-    .hamburger-menu {
-        width: 25px;
-        height: 20px;
-    }
-    
-    .hamburger-menu span {
-        height: 2px;
-    }
-    
-    .mobile-menu-overlay {
-        padding: 70px 1rem 1rem;
-    }
-    
-    .mobile-menu-overlay .nav-links a {
-        font-size: 1.2rem;
-        padding: 0.7rem 1.2rem;
-    }
-    
-    .mobile-menu-overlay .nav-buttons button {
-        padding: 10px 20px;
-        font-size: 0.95rem;
-    }
-    
-    /* Fix hero section spacing for very small mobile */
-    .hero {
-        padding: 90px 0 30px !important;
-        margin-top: 0 !important;
-    }
-    
-    .home-page {
-        padding-top: 75px !important;
-    }
-    
-    .hero-container {
-        padding: 0 1rem;
-    }
-    
-    .hero-content h1 {
-        font-size: 1.8rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .dashboard-preview {
-        max-width: 100%;
-        padding: 0.8rem;
-    }
-    
-    .features {
-        padding: 2.5rem 0;
-    }
-    
-    .section-title h2 {
-        font-size: 1.6rem;
-    }
-    
-    .feature-card {
-        padding: 1.2rem;
-    }
-    
-    .feature-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .about-container {
-        padding: 0 1rem;
-    }
-    
-    .about-text h3 {
-        font-size: 1.3rem;
-    }
-    
-    .about-text p,
-    .about-text ul li {
-        font-size: 0.95rem;
-    }
-    
-    .billing-container {
-        padding: 10px;
-        margin-top: 70px;
-        border-radius: 15px;
-    }
-    
-    .billing-header h1 {
-        font-size: 1.8rem;
-    }
-    
-    .billing-section {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    /* Mobile Table Styles - Show all information properly */
-    .items-table {
-        width: 100%;
-        display: block;
-        overflow-x: auto;
-    }
-    
-    .items-table thead {
-        display: none;
-    }
-    
-    .items-table tbody, 
-    .items-table tr, 
-    .items-table td {
-        display: block;
-        width: 100%;
-    }
-    
-    .items-table tr {
-        margin-bottom: 15px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        overflow: hidden;
-        background: white;
-        padding: 10px;
-    }
-    
-    .items-table td {
-        text-align: left;
-        padding: 8px 0;
-        position: relative;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.9rem;
-    }
-    
-    .items-table td:last-child {
-        border-bottom: none;
-    }
-    
-    .items-table td:before {
-        content: attr(data-label);
-        font-weight: bold;
-        color: var(--primary-violet);
-        min-width: 120px;
-        margin-right: 10px;
-    }
-    
-    /* Specific styling for action button */
-    .items-table td:last-child {
-        justify-content: center;
-        padding-top: 15px;
-    }
-    
-    .items-table td:last-child:before {
-        display: none;
-    }
-    
-    .items-table td:last-child .btn {
-        width: 100%;
-        max-width: 150px;
-        margin: 0;
-    }
-    
-    input, select, textarea {
-        padding: 10px;
-        font-size: 14px;
-    }
-    
-    .btn {
-        padding: 10px 15px;
-        font-size: 14px;
-        width: 100%;
-        margin: 5px 0;
-    }
-    
-    .actions {
-        flex-direction: column;
-    }
-    
-    .actions .btn {
-        width: 100%;
-        margin: 0.5rem 0 !important;
-    }
-    
-    .section {
-        padding: 1rem !important;
     }
     
     .billing-header h1 {
@@ -2138,4 +1968,91 @@ input[type="file"] {
     width: 120px;
     padding: 8px 12px;
     font-size: 1rem;
+} 
+
+.customer-data-btn, .sales-report-btn, .add-stock-btn, .start-billing-btn {
+    background: var(--primary-gradient);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 22px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
+    outline: none;
+    margin: 0 0.1rem;
+    min-width: 120px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+.customer-data-btn:hover, .sales-report-btn:hover, .add-stock-btn:hover, .start-billing-btn:hover {
+    background: var(--accent-gradient);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--shadow-medium);
+    transform: translateY(-2px) scale(1.04);
+} 
+@media (max-width: 992px) {
+    .nav-links {
+        justify-content: center;
+        gap: 0.3rem;
+    }
+    .nav-links a,
+    .nav-links a.customer-data-btn,
+    .nav-links a.sales-report-btn,
+    .nav-links a.add-stock-btn,
+    .nav-links a.start-billing-btn {
+        font-size: 0.98rem;
+        padding: 10px 12px;
+    }
+}
+@media (max-width: 700px) {
+    .nav-links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.7rem;
+        padding: 0.5rem 0;
+    }
+    .nav-links a,
+    .nav-links a.customer-data-btn,
+    .nav-links a.sales-report-btn,
+    .nav-links a.add-stock-btn,
+    .nav-links a.start-billing-btn {
+        width: 100%;
+        font-size: 1rem;
+        padding: 13px 0;
+        margin: 0;
+        text-align: center;
+    }
+} 
+
+.app-section,
+#billingApp,
+#stockSection,
+#customerDataSection,
+#salesReportSection {
+    min-height: 100vh;
+    margin: 0;
+    padding-top: 80px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+    .app-section,
+    #billingApp,
+    #stockSection,
+    #customerDataSection,
+    #salesReportSection {
+        min-height: 100vh;
+        padding-top: 70px;
+    }
+    .home-page {
+        padding-top: 70px !important;
+        margin-top: 0 !important;
+    }
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 } 

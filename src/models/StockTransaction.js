@@ -16,7 +16,13 @@ const stockTransactionSchema = new mongoose.Schema({
     },
     reference_id: mongoose.Schema.Types.ObjectId,
     reference_type: String,
-    notes: String
+    notes: String,
+    vendor: String,
+    invoice: String,
+    date: Date,
+    brand: String,
+    mrp: Number,
+    purchased_price: Number
 }, {
     timestamps: { 
         createdAt: 'created_at', 
