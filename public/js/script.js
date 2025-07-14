@@ -6,6 +6,12 @@ function toggleMobileMenu() {
     if (overlay.classList.contains('active')) {
         closeMobileMenu();
     } else {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+        overlay.style.zIndex = '1000';
+        // Force a reflow to ensure the display change takes effect
+        overlay.offsetHeight;
         overlay.classList.add('active');
         hamburger.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -17,7 +23,11 @@ function closeMobileMenu() {
     const hamburger = document.querySelector('.hamburger-menu');
     
     if (overlay) {
+        overlay.style.display = 'none';
         overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -222,14 +232,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Customer Dropdown Functions
 function setupCustomerDropdowns() {
+    console.log('setupCustomerDropdowns called');
+    
     const customerPhoneInput = document.getElementById('customerPhone');
     const customerNameInput = document.getElementById('customerName');
+    
+    console.log('customerPhoneInput found:', !!customerPhoneInput);
+    console.log('customerNameInput found:', !!customerNameInput);
     
     if (customerPhoneInput) {
         customerPhoneInput.addEventListener('click', showCustomerDropdown);
         customerPhoneInput.addEventListener('input', filterCustomers);
         customerPhoneInput.addEventListener('keydown', handleCustomerKeydown);
         customerPhoneInput.addEventListener('blur', hideCustomerDropdown);
+        console.log('Event listeners added to customerPhoneInput');
     }
     
     if (customerNameInput) {
@@ -237,14 +253,20 @@ function setupCustomerDropdowns() {
         customerNameInput.addEventListener('input', filterCustomers);
         customerNameInput.addEventListener('keydown', handleCustomerKeydown);
         customerNameInput.addEventListener('blur', hideCustomerDropdown);
+        console.log('Event listeners added to customerNameInput');
     }
 }
 
 function showCustomerDropdown() {
+    console.log('showCustomerDropdown called');
+    console.log('customerDatabase length:', customerDatabase.length);
+    
     const dropdown = getOrCreateCustomerDropdown();
     const customers = customerDatabase.filter(customer => 
         customer.name && customer.phone
     );
+    
+    console.log('Filtered customers:', customers.length);
     
     if (customers.length === 0) {
         dropdown.innerHTML = '<div class="autocomplete-option">No customers found</div>';
@@ -314,7 +336,13 @@ function getOrCreateCustomerDropdown() {
             }
         });
         
-        document.body.appendChild(dropdown);
+        // Append to billing container instead of body
+        const billingContainer = document.querySelector('.billing-container');
+        if (billingContainer) {
+            billingContainer.appendChild(dropdown);
+        } else {
+            document.body.appendChild(dropdown);
+        }
     }
     return dropdown;
 }
@@ -328,9 +356,15 @@ function positionCustomerDropdown() {
         const activeInput = document.activeElement;
         const rect = activeInput.getBoundingClientRect();
         
-        dropdown.style.left = rect.left + 'px';
-        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+        // Position relative to the billing container
+        const billingContainer = document.querySelector('.billing-container');
+        const containerRect = billingContainer ? billingContainer.getBoundingClientRect() : rect;
+        
+        dropdown.style.left = (rect.left - containerRect.left) + 'px';
+        dropdown.style.top = (rect.bottom - containerRect.top + 5) + 'px';
         dropdown.style.width = rect.width + 'px';
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '1000';
     }
 }
 
@@ -396,21 +430,75 @@ function updateActiveCustomerOption(options) {
 // Navigation Functions
 // --- Navigation Section Logic ---
 function hideAllSections() {
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('billingApp').style.display = 'none';
-    document.getElementById('customerDataSection').style.display = 'none';
-    document.getElementById('salesReportSection').style.display = 'none';
-    document.getElementById('stockSection').style.display = 'none';
-    // Scroll to top and prevent body scrolling issues
-    window.scrollTo(0, 0);
+    // Hide all sections with more aggressive hiding
+    const sections = [
+        'homePage',
+        'billingApp', 
+        'customerDataSection',
+        'salesReportSection',
+        'stockSection'
+    ];
+    
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            // Completely remove from document flow
+            section.style.display = 'none';
+            section.style.visibility = 'hidden';
+            section.style.opacity = '0';
+            section.style.position = 'absolute';
+            section.style.top = '-9999px';
+            section.style.left = '-9999px';
+            section.style.zIndex = '-1';
+            section.style.height = '0';
+            section.style.overflow = 'hidden';
+            section.style.pointerEvents = 'none';
+        }
+    });
+    
+    // Ensure mobile menu overlay is completely hidden
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+    }
+    
+    // Reset hamburger menu
+    const hamburger = document.querySelector('.hamburger-menu');
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
+    
+    // Reset body styles
     document.body.style.overflow = 'auto';
     document.body.style.position = '';
     document.body.style.width = '';
+    
+    // Force a reflow to ensure all changes take effect
+    document.body.offsetHeight;
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
 }
 
 function showCustomerData() {
     hideAllSections();
-    document.getElementById('customerDataSection').style.display = 'block';
+    const section = document.getElementById('customerDataSection');
+    if (section) {
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.top = 'auto';
+        section.style.left = 'auto';
+        section.style.zIndex = '1001';
+        section.style.height = 'auto';
+        section.style.overflow = 'visible';
+        section.style.pointerEvents = 'auto';
+    }
     fetchAndDisplayCustomerData();
     document.body.style.background = 'var(--primary-purple)';
     document.body.style.minHeight = '100vh';
@@ -419,7 +507,19 @@ function showCustomerData() {
 
 function showSalesReport() {
     hideAllSections();
-    document.getElementById('salesReportSection').style.display = 'block';
+    const section = document.getElementById('salesReportSection');
+    if (section) {
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.top = 'auto';
+        section.style.left = 'auto';
+        section.style.zIndex = '1001';
+        section.style.height = 'auto';
+        section.style.overflow = 'visible';
+        section.style.pointerEvents = 'auto';
+    }
     fetchAndDisplaySalesReport();
     document.body.style.background = 'var(--primary-purple)';
     document.body.style.minHeight = '100vh';
@@ -428,21 +528,50 @@ function showSalesReport() {
 
 function showBillingApp() {
     hideAllSections();
-    document.getElementById('billingApp').style.display = 'block';
-        document.body.style.background = 'var(--primary-purple)';
-        document.body.style.minHeight = '100vh';
-        document.body.style.padding = '20px';
-        if (window.innerWidth <= 768) {
-            document.body.style.overflow = 'auto';
-            window.scrollTo(0, 0);
-        }
+    const section = document.getElementById('billingApp');
+    if (section) {
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.top = 'auto';
+        section.style.left = 'auto';
+        section.style.zIndex = '1001';
+        section.style.height = 'auto';
+        section.style.overflow = 'visible';
+        section.style.pointerEvents = 'auto';
+    }
+    document.body.style.background = 'var(--primary-purple)';
+    document.body.style.minHeight = '100vh';
+    document.body.style.padding = '20px';
+    if (window.innerWidth <= 768) {
+        document.body.style.overflow = 'auto';
+        window.scrollTo(0, 0);
+    }
     updateItemsTable();
     window.scrollTo(0, 0);
+    
+    // Initialize customer dropdown after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        setupCustomerDropdowns();
+    }, 100);
 }
 
 function showStock() {
     hideAllSections();
-    document.getElementById('stockSection').style.display = 'block';
+    const section = document.getElementById('stockSection');
+    if (section) {
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.top = 'auto';
+        section.style.left = 'auto';
+        section.style.zIndex = '1001';
+        section.style.height = 'auto';
+        section.style.overflow = 'visible';
+        section.style.pointerEvents = 'auto';
+    }
     updateStockTable();
     document.body.style.background = 'var(--primary-purple)';
     document.body.style.minHeight = '100vh';
@@ -488,10 +617,22 @@ function toggleStockSections() {
 
 function showHomePage() {
     hideAllSections();
-    document.getElementById('homePage').style.display = 'block';
-        document.body.style.background = '';
-        document.body.style.minHeight = '';
-        document.body.style.padding = '';
+    const section = document.getElementById('homePage');
+    if (section) {
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.top = 'auto';
+        section.style.left = 'auto';
+        section.style.zIndex = '1001';
+        section.style.height = 'auto';
+        section.style.overflow = 'visible';
+        section.style.pointerEvents = 'auto';
+    }
+    document.body.style.background = '';
+    document.body.style.minHeight = '';
+    document.body.style.padding = '';
     window.scrollTo(0, 0);
 }
 
@@ -559,11 +700,11 @@ function updateItemsTable() {
         console.log('Item id', item.id, typeof item.id);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${item.name}</td>
-            <td>₹${item.mrp.toFixed(2)}</td>
-            <td>${item.quantity}</td>
-            <td>₹${item.total.toFixed(2)}</td>
-            <td>
+            <td data-label="Item Name">${item.name}</td>
+            <td data-label="MRP (₹)">₹${item.mrp.toFixed(2)}</td>
+            <td data-label="Quantity">${item.quantity}</td>
+            <td data-label="Total (₹)">₹${item.total.toFixed(2)}</td>
+            <td data-label="Action">
                 <button class="btn-remove" onclick="removeItem('${item.id}')">Remove</button>
             </td>
         `;
@@ -676,7 +817,27 @@ async function sendWhatsApp() {
 }
 
 function showMessage(message, type) {
-    const messagesDiv = document.getElementById('messages');
+    // Determine which section is currently visible
+    const stockSection = document.getElementById('stockSection');
+    const billingApp = document.getElementById('billingApp');
+    
+    let messagesDiv;
+    if (stockSection && stockSection.style.display !== 'none') {
+        // Stock section is visible
+        messagesDiv = document.getElementById('stockMessages');
+    } else if (billingApp && billingApp.style.display !== 'none') {
+        // Billing app is visible
+        messagesDiv = document.getElementById('messages');
+    } else {
+        // Fallback to any available messages div
+        messagesDiv = document.getElementById('stockMessages') || document.getElementById('messages');
+    }
+    
+    if (!messagesDiv) {
+        console.error('No messages container found');
+        return;
+    }
+    
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
     messageElement.textContent = message;
@@ -817,44 +978,124 @@ document.addEventListener('mousedown', function(e) {
 
 // Mobile menu button handlers
 function handleMobileStartBilling() {
-    closeMobileMenu();
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const hamburger = document.querySelector('.hamburger-menu');
+    
+    // Immediately hide overlay and reset state
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+    }
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    
+    // Force a reflow to ensure the overlay is hidden
+    if (overlay) overlay.offsetHeight;
+    
     setTimeout(() => {
         showBillingApp();
-    }, 100);
+    }, 50);
 }
 
 function handleMobileCustomerData() {
-    closeMobileMenu();
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const hamburger = document.querySelector('.hamburger-menu');
+    
+    // Immediately hide overlay and reset state
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+    }
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    
+    // Force a reflow to ensure the overlay is hidden
+    if (overlay) overlay.offsetHeight;
+    
     setTimeout(() => {
         showCustomerData();
-    }, 100);
+    }, 50);
 }
 
 function handleMobileSalesReport() {
-    closeMobileMenu();
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const hamburger = document.querySelector('.hamburger-menu');
+    
+    // Immediately hide overlay and reset state
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+    }
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    
+    // Force a reflow to ensure the overlay is hidden
+    if (overlay) overlay.offsetHeight;
+    
     setTimeout(() => {
         showSalesReport();
-    }, 100);
+    }, 50);
+}
+
+function handleMobileStock() {
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const hamburger = document.querySelector('.hamburger-menu');
+    
+    // Immediately hide overlay and reset state
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('active');
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+    }
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    
+    // Force a reflow to ensure the overlay is hidden
+    if (overlay) overlay.offsetHeight;
+    
+    setTimeout(() => {
+        showStock();
+    }, 50);
 }
 
 async function updateStockTable() {
     try {
         const stock = await fetchStock();
+        console.log('Fetched stock:', stock); // Log the stock array for debugging
         const tbody = document.getElementById('stockTableBody');
         tbody.innerHTML = '';
         
         stock.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-                <td>${item.name}</td>
-                <td>${item.brand || '-'}</td>
-                <td>₹${item.mrp}</td>
-                <td>₹${item.purchased_price || '-'}</td>
-                <td>${item.quantity || 0}</td>
-                <td>
-                    <button class="btn-remove" onclick="removeStockItem('${item.id}')">Remove</button>
-            </td>
-        `;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td data-label="Item Name">${item.name}</td>
+                <td data-label="Brand">${item.brand || '-'}</td>
+                <td data-label="MRP (₹)">₹${item.mrp}</td>
+                <td data-label="Purchased Price (₹)">₹${item.purchased_price || '-'}</td>
+                <td data-label="Quantity">${item.quantity || 0}</td>
+                <td data-label="Action">
+                    <button class="btn-remove" onclick="removeStockItem('${item.product_id}')">Remove</button>
+                </td>
+            `;
             tbody.appendChild(row);
         });
     } catch (error) {
@@ -887,11 +1128,48 @@ async function removeStockItem(id) {
 }
 
 function clearStockForm() {
-    document.getElementById('stockItemName').value = '';
-    document.getElementById('stockBrand').value = '';
-    document.getElementById('stockMRP').value = '';
-    document.getElementById('stockPurchasedPrice').value = '';
-    document.getElementById('stockQuantity').value = '1';
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Add New Stock (new item) fields
+    const newFields = [
+        'stockItemName', 'stockBrand', 'stockMRP', 'stockPurchasedPrice', 'stockQuantity',
+        'stockVendorInput', 'stockInvoice', 'stockDate',
+        'consumableGlass', 'consumableSpoon', 'consumableStirrer',
+        'consumableNapkin', 'consumableFoilSmall', 'consumableFoilBig'
+    ];
+    newFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.type === 'number' || el.type === 'text' || el.type === 'date') {
+                if (el.type === 'date') {
+                    el.value = today;
+                } else if (el.type === 'number') {
+                    el.value = (id === 'stockQuantity') ? '1' : '0';
+                } else {
+                    el.value = '';
+                }
+            }
+        }
+    });
+    // Add Stock (existing item) fields
+    const existingFields = [
+        'existingStockItemNameInput', 'existingStockVendorInput', 'existingStockMRP',
+        'existingStockPurchasePrice', 'existingStockInvoice', 'existingStockDate',
+        'existingStockBrand', 'existingStockAddQuantity'
+    ];
+    existingFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.type === 'number') {
+                el.value = (id === 'existingStockAddQuantity') ? '1' : '';
+            } else if (el.type === 'date') {
+                el.value = today;
+            } else {
+                el.value = '';
+            }
+        }
+    });
 }
 
 // --- Fetch and Populate Customer Data ---
@@ -918,9 +1196,9 @@ async function fetchAndDisplayCustomerData() {
         customers.forEach(cust => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${cust.name || ''}</td>
-                <td>${cust.phone || ''}</td>
-                <td>${lastPurchaseMap[cust.phone] ? new Date(lastPurchaseMap[cust.phone]).toLocaleDateString() : '-'}</td>
+                <td data-label="Name">${cust.name || ''}</td>
+                <td data-label="WhatsApp Number">${cust.phone || ''}</td>
+                <td data-label="Last Purchase Date">${lastPurchaseMap[cust.phone] ? new Date(lastPurchaseMap[cust.phone]).toLocaleDateString() : '-'}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -938,10 +1216,10 @@ async function fetchAndDisplaySalesReport() {
         sales.forEach(row => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${row.date}</td>
-                <td>${row.total_bills}</td>
-                <td>₹${row.total_sales.toFixed(2)}</td>
-                <td>${row.total_items_sold}</td>
+                <td data-label="Date">${row.date}</td>
+                <td data-label="Total Bills">${row.total_bills}</td>
+                <td data-label="Total Sales (₹)">₹${row.total_sales.toFixed(2)}</td>
+                <td data-label="Total Items Sold">${row.total_items_sold}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -1013,8 +1291,8 @@ async function addStockItem() {
 
 // Update addQuantityToExistingStock to send all new fields
 async function addQuantityToExistingStock() {
-    const itemName = document.getElementById('existingStockItemName').value;
-    const vendor = document.getElementById('existingStockVendor').value;
+    const itemName = document.getElementById('existingStockItemNameInput').value;
+    const vendor = document.getElementById('existingStockVendorInput').value;
     const mrp = parseFloat(document.getElementById('existingStockMRP').value) || 0;
     const purchasePrice = parseFloat(document.getElementById('existingStockPurchasePrice').value) || 0;
     const invoice = document.getElementById('existingStockInvoice').value.trim();
@@ -1074,7 +1352,32 @@ document.addEventListener('DOMContentLoaded', function() {
             addStockItemWithConsumables();
         };
     }
+    
+    // Initialize data and dropdowns
+    initializeApp();
 });
+
+// Initialize the application
+async function initializeApp() {
+    try {
+        // Load all necessary data
+        await Promise.all([
+            fetchProducts(),
+            fetchStock(),
+            fetchCustomers()
+        ]);
+        
+        // Set up customer dropdowns
+        setupCustomerDropdowns();
+        
+        console.log('App initialized successfully');
+        console.log('Products loaded:', productDatabase.length);
+        console.log('Customers loaded:', customerDatabase.length);
+        console.log('Stock loaded:', stockDatabase.length);
+    } catch (error) {
+        console.error('Error initializing app:', error);
+    }
+}
 
 async function addStockItemWithConsumables() {
     // Product fields
@@ -1083,7 +1386,7 @@ async function addStockItemWithConsumables() {
     const mrp = parseFloat(document.getElementById('stockMRP').value) || 0;
     const purchasedPrice = parseFloat(document.getElementById('stockPurchasedPrice').value) || 0;
     const quantity = parseInt(document.getElementById('stockQuantity').value) || 1;
-    const vendor = document.getElementById('stockVendor').value;
+    const vendor = document.getElementById('stockVendorInput').value;
     const invoice = document.getElementById('stockInvoice').value.trim();
     const date = document.getElementById('stockDate').value;
     // Consumables
@@ -1144,3 +1447,139 @@ async function addStockItemWithConsumables() {
         showMessage(`Error adding stock item: ${error.message}`, 'error');
     }
 }
+
+// --- Autocomplete Dropdown for Stock Item Name (Existing Stock) ---
+function setupExistingStockItemDropdown() {
+    const input = document.getElementById('existingStockItemNameInput');
+    const dropdown = document.getElementById('existingStockItemDropdown');
+    if (!input || !dropdown) return;
+    function showDropdown(value) {
+        dropdown.innerHTML = '';
+        let matches = [];
+        if (!value) {
+            matches = productDatabase;
+        } else {
+            matches = productDatabase.filter(product => product.name.toLowerCase().includes(value));
+        }
+        if (matches.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        matches.forEach(match => {
+            const option = document.createElement('div');
+            option.className = 'autocomplete-option';
+            option.textContent = match.name;
+            option.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                input.value = match.name;
+                // Autofill related fields
+                document.getElementById('existingStockBrand').value = match.brand || '';
+                document.getElementById('existingStockMRP').value = match.mrp || '';
+                document.getElementById('existingStockPurchasePrice').value = match.purchased_price || '';
+                document.getElementById('existingStockAddQuantity').value = (match.quantity !== undefined && match.quantity !== null) ? match.quantity : 1;
+                dropdown.style.display = 'none';
+                input.focus();
+            });
+            dropdown.appendChild(option);
+        });
+        dropdown.style.display = 'block';
+    }
+    input.addEventListener('input', function() {
+        const value = this.value.trim().toLowerCase();
+        showDropdown(value);
+    });
+    input.addEventListener('focus', function() {
+        showDropdown('');
+    });
+    input.addEventListener('blur', function() {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 200);
+    });
+}
+
+// --- Autocomplete Dropdown for Vendor (Existing Stock) ---
+function setupExistingStockVendorDropdown() {
+    const input = document.getElementById('existingStockVendorInput');
+    const dropdown = document.getElementById('existingStockVendorDropdown');
+    if (!input || !dropdown) return;
+    const vendors = ["PURVANCHAL", "AMAZON", "BLINKIT", "METRO", "BB"];
+    input.addEventListener('input', function() {
+        const value = this.value.trim().toLowerCase();
+        dropdown.innerHTML = '';
+        if (!value) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        const matches = vendors.filter(vendor => vendor.toLowerCase().includes(value));
+        if (matches.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        matches.forEach(match => {
+            const option = document.createElement('div');
+            option.className = 'autocomplete-option';
+            option.textContent = match;
+            option.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                input.value = match;
+                dropdown.style.display = 'none';
+                input.focus();
+            });
+            dropdown.appendChild(option);
+        });
+        dropdown.style.display = 'block';
+    });
+    input.addEventListener('blur', function() {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 200);
+    });
+}
+
+// --- Autocomplete Dropdown for Vendor (Add New Stock) ---
+function setupNewStockVendorDropdown() {
+    const input = document.getElementById('stockVendorInput');
+    const dropdown = document.getElementById('stockVendorDropdown');
+    if (!input || !dropdown) return;
+    const vendors = ["PURVANCHAL", "AMAZON", "BLINKIT", "METRO", "BB"];
+    input.addEventListener('input', function() {
+        const value = this.value.trim().toLowerCase();
+        dropdown.innerHTML = '';
+        if (!value) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        const matches = vendors.filter(vendor => vendor.toLowerCase().includes(value));
+        if (matches.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        matches.forEach(match => {
+            const option = document.createElement('div');
+            option.className = 'autocomplete-option';
+            option.textContent = match;
+            option.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                input.value = match;
+                dropdown.style.display = 'none';
+                input.focus();
+            });
+            dropdown.appendChild(option);
+        });
+        dropdown.style.display = 'block';
+    });
+    input.addEventListener('blur', function() {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 200);
+    });
+}
+
+// Call these in showStock after productDatabase is loaded
+function setupStockDropdowns() {
+    setupExistingStockItemDropdown();
+    setupExistingStockVendorDropdown();
+    setupNewStockVendorDropdown();
+}
+
+// Patch showStock to call setupStockDropdowns after productDatabase is loaded
+const originalShowStock = showStock;
+showStock = function() {
+    originalShowStock.apply(this, arguments);
+    setTimeout(setupStockDropdowns, 200); // Wait for DOM and productDatabase
+};

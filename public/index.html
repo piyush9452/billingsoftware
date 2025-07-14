@@ -331,163 +331,163 @@
 
     <!-- Stock Management Section -->
     <div id="stockSection" class="app-section" style="display:none; padding: 2rem;">
+        <!-- Remove toggle button from here -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2>Stock Management</h2>
-            <button id="toggleStockSection" class="btn btn-primary" onclick="toggleStockSections()">Add New Item</button>
         </div>
         
         <!-- Add Stock Section -->
-        <div id="addItemSection" class="section">
-            <h3>Add Stock</h3>
-            <form id="addExistingItemForm" class="add-item-form" onsubmit="event.preventDefault(); addQuantityToExistingStock();">
-                <div class="form-row" style="display: flex; gap: 2rem;">
-                    <div style="flex: 1;">
-                        <div class="form-group">
-                            <label for="existingStockItemName">Item Name</label>
-                            <select id="existingStockItemName" required></select>
+        <div id="addItemSection" style="margin-bottom: 2rem;">
+            <div class="add-stock-form card-form">
+                <div class="card-header">
+                    <h2 style="margin: 0;">Add Stock</h2>
+                    <button id="toggleStockSection" class="btn btn-primary" onclick="toggleStockSections()">Add New Item</button>
+                </div>
+                <form id="addExistingItemForm" class="add-item-form card-form" onsubmit="event.preventDefault(); addQuantityToExistingStock();">
+                    <div class="form-row" style="display: flex; gap: 2rem;">
+                        <div style="flex: 1;">
+                            <div class="form-group">
+                                <label for="existingStockItemName">Item Name</label>
+                                <input type="text" id="existingStockItemNameInput" placeholder="Select or type item name" autocomplete="off" required>
+                                <div id="existingStockItemDropdown" class="autocomplete-dropdown"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockVendor">Vendor</label>
+                                <input type="text" id="existingStockVendorInput" placeholder="Select or type vendor" autocomplete="off" required>
+                                <div id="existingStockVendorDropdown" class="autocomplete-dropdown"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockMRP">MRP</label>
+                                <input type="number" id="existingStockMRP" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockPurchasePrice">Purchase Price</label>
+                                <input type="number" id="existingStockPurchasePrice" step="0.01" min="0" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="existingStockVendor">Vendor</label>
-                            <select id="existingStockVendor" required>
-                                <option value="">Select Vendor</option>
-                                <option value="PURVANCHAL">PURVANCHAL</option>
-                                <option value="AMAZON">AMAZON</option>
-                                <option value="BLINKIT">BLINKIT</option>
-                                <option value="METRO">METRO</option>
-                                <option value="BB">BB</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="existingStockMRP">MRP</label>
-                            <input type="number" id="existingStockMRP" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="existingStockPurchasePrice">Purchase Price</label>
-                            <input type="number" id="existingStockPurchasePrice" step="0.01" min="0" required>
+                        <div style="flex: 1;">
+                            <div class="form-group">
+                                <label for="existingStockInvoice">Invoice Number</label>
+                                <input type="text" id="existingStockInvoice" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockDate">Date</label>
+                                <input type="date" id="existingStockDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockBrand">Brand</label>
+                                <input type="text" id="existingStockBrand">
+                            </div>
+                            <div class="form-group">
+                                <label for="existingStockAddQuantity">QTY</label>
+                                <input type="number" id="existingStockAddQuantity" value="1" min="1" required>
+                            </div>
                         </div>
                     </div>
-                    <div style="flex: 1;">
-                        <div class="form-group">
-                            <label for="existingStockInvoice">Invoice Number</label>
-                            <input type="text" id="existingStockInvoice" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="existingStockDate">Date</label>
-                            <input type="date" id="existingStockDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="existingStockBrand">Brand</label>
-                            <input type="text" id="existingStockBrand">
-                        </div>
-                        <div class="form-group">
-                            <label for="existingStockAddQuantity">QTY</label>
-                            <input type="number" id="existingStockAddQuantity" value="1" min="1" required>
-                        </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Submit</button>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Submit</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
         
         <!-- Add New Stock Section -->
-        <div id="addNewStockSection" class="section" style="display: none;">
-            <h3>Add New Stock</h3>
-            <!-- Step 1: Main Product Form -->
-            <form id="addStockFormStep1" class="add-stock-form">
-                <div class="form-row" style="display: flex; gap: 2rem;">
-                    <div style="flex: 1;">
-                        <div class="form-group">
-                            <label for="stockItemName">Item Name</label>
-                            <input type="text" id="stockItemName" required>
+        <div id="addNewStockSection" style="display: none; margin-bottom: 2rem;">
+            <div class="add-stock-form card-form">
+                <div class="card-header">
+                    <h2 style="margin: 0;">Add New Stock</h2>
+                    <button id="toggleStockSection" class="btn btn-primary" onclick="toggleStockSections()">Add Stock</button>
+                </div>
+                <!-- Step 1: Main Product Form -->
+                <form id="addStockFormStep1" class="add-stock-form card-form">
+                    <div class="form-row" style="display: flex; gap: 2rem;">
+                        <div style="flex: 1;">
+                            <div class="form-group">
+                                <label for="stockItemName">Item Name</label>
+                                <input type="text" id="stockItemName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockVendor">Vendor</label>
+                                <input type="text" id="stockVendorInput" placeholder="Select or type vendor" autocomplete="off" required>
+                                <div id="stockVendorDropdown" class="autocomplete-dropdown"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockMRP">MRP</label>
+                                <input type="number" id="stockMRP" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockPurchasedPrice">Purchase Price</label>
+                                <input type="number" id="stockPurchasedPrice" step="0.01" min="0" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="stockVendor">Vendor</label>
-                            <select id="stockVendor" required>
-                                <option value="">Select Vendor</option>
-                                <option value="PURVANCHAL">PURVANCHAL</option>
-                                <option value="AMAZON">AMAZON</option>
-                                <option value="BLINKIT">BLINKIT</option>
-                                <option value="METRO">METRO</option>
-                                <option value="BB">BB</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="stockMRP">MRP</label>
-                            <input type="number" id="stockMRP" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="stockPurchasedPrice">Purchase Price</label>
-                            <input type="number" id="stockPurchasedPrice" step="0.01" min="0" required>
+                        <div style="flex: 1;">
+                            <div class="form-group">
+                                <label for="stockInvoice">Invoice Number</label>
+                                <input type="text" id="stockInvoice" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockDate">Date</label>
+                                <input type="date" id="stockDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockBrand">Brand</label>
+                                <input type="text" id="stockBrand">
+                            </div>
+                            <div class="form-group">
+                                <label for="stockQuantity">QTY</label>
+                                <input type="number" id="stockQuantity" value="1" min="1" required>
+                            </div>
                         </div>
                     </div>
-                    <div style="flex: 1;">
-                        <div class="form-group">
-                            <label for="stockInvoice">Invoice Number</label>
-                            <input type="text" id="stockInvoice" required>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="nextToConsumablesBtn" type="button">Next</button>
+                    </div>
+                </form>
+                <!-- Step 2: Consumables Form -->
+                <form id="addStockFormStep2" class="add-stock-form card-form" style="display:none;">
+                    <h4>Consumables</h4>
+                    <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 2rem;">
+                        <div style="flex: 1; min-width: 220px;">
+                            <div class="form-group">
+                                <label for="consumableGlass">Glass- 150 ML</label>
+                                <input type="number" id="consumableGlass" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="consumableSpoon">Spoon</label>
+                                <input type="number" id="consumableSpoon" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="consumableStirrer">Stirrer</label>
+                                <input type="number" id="consumableStirrer" min="0" value="0">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="stockDate">Date</label>
-                            <input type="date" id="stockDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="stockBrand">Brand</label>
-                            <input type="text" id="stockBrand">
-                        </div>
-                        <div class="form-group">
-                            <label for="stockQuantity">QTY</label>
-                            <input type="number" id="stockQuantity" value="1" min="1" required>
+                        <div style="flex: 1; min-width: 220px;">
+                            <div class="form-group">
+                                <label for="consumableNapkin">Napkin</label>
+                                <input type="number" id="consumableNapkin" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="consumableFoilSmall">Aluminum foil container- SMALL</label>
+                                <input type="number" id="consumableFoilSmall" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="consumableFoilBig">Aluminum foil container- BIG</label>
+                                <input type="number" id="consumableFoilBig" min="0" value="0">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" id="nextToConsumablesBtn" type="button">Next</button>
-                </div>
-            </form>
-            <!-- Step 2: Consumables Form -->
-            <form id="addStockFormStep2" class="add-stock-form" style="display:none;">
-                <h4>Consumables</h4>
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 2rem;">
-                    <div style="flex: 1; min-width: 220px;">
-                        <div class="form-group">
-                            <label for="consumableGlass">Glass- 150 ML</label>
-                            <input type="number" id="consumableGlass" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="consumableSpoon">Spoon</label>
-                            <input type="number" id="consumableSpoon" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="consumableStirrer">Stirrer</label>
-                            <input type="number" id="consumableStirrer" min="0" value="0">
-                        </div>
+                    <div class="form-actions" style="display: flex; gap: 1rem;">
+                        <button class="btn" id="backToProductBtn" type="button">Back</button>
+                        <button class="btn btn-primary" id="submitNewStockBtn" type="submit">Submit</button>
                     </div>
-                    <div style="flex: 1; min-width: 220px;">
-                        <div class="form-group">
-                            <label for="consumableNapkin">Napkin</label>
-                            <input type="number" id="consumableNapkin" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="consumableFoilSmall">Aluminum foil container- SMALL</label>
-                            <input type="number" id="consumableFoilSmall" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="consumableFoilBig">Aluminum foil container- BIG</label>
-                            <input type="number" id="consumableFoilBig" min="0" value="0">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-actions" style="display: flex; gap: 1rem;">
-                    <button class="btn" id="backToProductBtn" type="button">Back</button>
-                    <button class="btn btn-primary" id="submitNewStockBtn" type="submit">Submit</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
         
         <!-- Stock Table -->
+        <div id="stockMessages"></div>
         <div class="section">
-            <h3>Current Stock</h3>
+            <h2>Current Stock</h2>
             <table class="items-table stock-table">
                 <thead>
                     <tr>

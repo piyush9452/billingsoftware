@@ -122,7 +122,7 @@ body {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     z-index: 1000;
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -877,6 +877,7 @@ input:focus, select:focus, textarea:focus {
     background: linear-gradient(45deg, var(--warning-color), #ffb300);
 }
 
+/* Enhanced Responsive Tables (Bill Items and Stock) */
 .items-table {
     width: 100%;
     border-collapse: collapse;
@@ -885,6 +886,276 @@ input:focus, select:focus, textarea:focus {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 5px 15px var(--shadow-light);
+}
+
+/* Responsive table for mobile - Enhanced */
+@media (max-width: 768px) {
+    .items-table,
+    .stock-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        margin-top: 15px;
+        border-radius: 8px;
+    }
+    
+    .items-table thead,
+    .stock-table thead {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    
+    .items-table tbody,
+    .stock-table tbody {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    
+    .items-table tr,
+    .stock-table tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    
+    .items-table th, .items-table td,
+    .stock-table th, .stock-table td {
+        min-width: 100px;
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+    
+    .items-table th:last-child,
+    .items-table td:last-child,
+    .stock-table th:last-child,
+    .stock-table td:last-child {
+        min-width: 80px;
+    }
+}
+
+/* Card-based layout for very small screens */
+@media (max-width: 480px) {
+    .items-table,
+    .stock-table {
+        display: block;
+        overflow: visible;
+        white-space: normal;
+        margin-top: 12px;
+        font-size: 0.8rem;
+        background: transparent;
+        box-shadow: none;
+    }
+    
+    .items-table thead,
+    .stock-table thead {
+        display: none; /* Hide headers on very small screens */
+    }
+    
+    .items-table tbody,
+    .stock-table tbody {
+        display: block;
+    }
+    
+    .items-table tr,
+    .stock-table tr {
+        display: block;
+        background: white;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-light);
+        padding: 12px;
+        position: relative;
+    }
+    
+    .items-table td,
+    .stock-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 6px 0;
+        border: none;
+        font-size: 0.85rem;
+        min-width: auto;
+        word-break: break-word;
+        white-space: normal;
+    }
+    
+    .items-table td:before,
+    .stock-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--primary-violet);
+        min-width: 80px;
+        margin-right: 0;
+        margin-bottom: 2px;
+        word-break: break-word;
+        white-space: normal;
+        display: block;
+    }
+    
+    .items-table td:last-child,
+    .stock-table td:last-child {
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-color);
+        margin-top: 4px;
+    }
+    
+    .items-table td:last-child:before,
+    .stock-table td:last-child:before {
+        display: none;
+    }
+    
+    .btn-remove {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+    
+    /* Specific rules for customer data table to ensure mobile display */
+    #customerDataSection .items-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--primary-violet);
+        min-width: 80px;
+        margin-right: 0;
+        margin-bottom: 2px;
+        word-break: break-word;
+        white-space: normal;
+        display: block;
+    }
+    
+    #customerDataSection .items-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 6px 0;
+        border: none;
+        font-size: 0.85rem;
+        min-width: auto;
+        word-break: break-word;
+        white-space: normal;
+    }
+    
+    /* Specific rules for sales report table to ensure mobile display */
+    #salesReportSection .items-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--primary-violet);
+        min-width: 80px;
+        margin-right: 0;
+        margin-bottom: 2px;
+        word-break: break-word;
+        white-space: normal;
+        display: block;
+    }
+    
+    #salesReportSection .items-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 6px 0;
+        border: none;
+        font-size: 0.85rem;
+        min-width: auto;
+        word-break: break-word;
+        white-space: normal;
+    }
+    
+    /* Specific rules for stock table to ensure mobile display */
+    #stockSection .stock-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--primary-violet);
+        min-width: 80px;
+        margin-right: 0;
+        margin-bottom: 2px;
+        word-break: break-word;
+        white-space: normal;
+        display: block;
+    }
+    
+    #stockSection .stock-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 6px 0;
+        border: none;
+        font-size: 0.85rem;
+        min-width: auto;
+        word-break: break-word;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 360px) {
+    .items-table,
+    .stock-table {
+        margin-top: 10px;
+        font-size: 0.75rem;
+    }
+    
+    .items-table tr,
+    .stock-table tr {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .items-table td,
+    .stock-table td {
+        padding: 4px 0;
+        font-size: 0.8rem;
+    }
+    
+    .items-table td:before,
+    .stock-table td:before {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+    
+    .btn-remove {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+    }
+    
+    /* Specific rules for customer data table at 360px */
+    #customerDataSection .items-table td:before {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+    
+    #customerDataSection .items-table td {
+        padding: 4px 0;
+        font-size: 0.8rem;
+    }
+    
+    /* Specific rules for sales report table at 360px */
+    #salesReportSection .items-table td:before {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+    
+    #salesReportSection .items-table td {
+        padding: 4px 0;
+        font-size: 0.8rem;
+    }
+    
+    /* Specific rules for stock table at 360px */
+    #stockSection .stock-table td:before {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+    
+    #stockSection .stock-table td {
+        padding: 4px 0;
+        font-size: 0.8rem;
+    }
 }
 
 .items-table th, .items-table td {
@@ -1026,6 +1297,29 @@ input:focus, select:focus, textarea:focus {
     display: none;
 }
 
+/* Responsive autocomplete dropdown */
+@media (max-width: 768px) {
+    .autocomplete-dropdown {
+        max-height: 150px;
+    }
+    
+    .autocomplete-option {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .autocomplete-dropdown {
+        max-height: 120px;
+    }
+    
+    .autocomplete-option {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+}
+
 .autocomplete-option {
     padding: 12px 15px;
     cursor: pointer;
@@ -1064,6 +1358,32 @@ input:focus, select:focus, textarea:focus {
 
 #customerDropdown .autocomplete-option:hover small {
     color: #ccc;
+}
+
+/* Enhanced customer dropdown styling */
+#customerDropdown {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    z-index: 1000;
+}
+
+#customerDropdown .autocomplete-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+#customerDropdown .autocomplete-option:hover {
+    background-color: var(--primary-purple);
+}
+
+#customerDropdown .autocomplete-option:last-child {
+    border-bottom: none;
 }
 
 /* Form group with relative positioning for autocomplete */
@@ -1155,23 +1475,33 @@ input:focus, select:focus, textarea:focus {
 /* Add Stock Form Styles */
 .add-stock-form {
     background: #f8f9ff;
-    padding: 25px;
-    border-radius: 15px;
-    margin-bottom: 30px;
-    border: 2px solid var(--primary-purple);
+    border: 2px solid #cfcafc;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px 0 rgba(122, 111, 240, 0.08);
+    padding: 32px 28px 24px 28px;
+    margin-bottom: 32px;
+    transition: box-shadow 0.2s;
+}
+.add-stock-form:focus-within, .add-stock-form:hover {
+    box-shadow: 0 8px 32px 0 rgba(122, 111, 240, 0.13);
 }
 
 .add-stock-form h2 {
+    color: var(--primary-violet);
     margin-bottom: 20px;
-    color: var(--text-dark);
-    font-size: 1.4rem;
+    font-size: clamp(1.3rem, 3vw, 1.5rem);
+    border-bottom: 2px solid var(--primary-violet);
+    padding-bottom: 10px;
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: flex;
+    gap: 2rem;
     margin-bottom: 20px;
+}
+
+.form-row > div {
+    flex: 1;
 }
 
 .form-row .form-group {
@@ -1184,24 +1514,25 @@ input:focus, select:focus, textarea:focus {
 }
 
 .form-actions .btn {
-    min-width: 150px;
-    padding: 12px 30px;
-    font-size: 1rem;
+    min-width: 120px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 /* Stock Table Styles */
 .stock-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1.5rem;
-    background: #fafaff;
+    margin-top: 20px;
+    background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(122, 111, 240, 0.08);
+    box-shadow: 0 5px 15px var(--shadow-light);
 }
 
 .stock-table th, .stock-table td {
-    padding: 14px 10px;
+    padding: 15px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.9rem;
@@ -1211,10 +1542,15 @@ input:focus, select:focus, textarea:focus {
     background: var(--accent-gradient);
     color: var(--primary-white);
     font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .stock-table tr:last-child td {
     border-bottom: none;
+}
+
+.stock-table tr:hover {
+    background-color: var(--primary-purple);
 }
 
 /* Small button for Remove */
@@ -1673,6 +2009,7 @@ input:focus, select:focus, textarea:focus {
     }
     
     .items-table td:before {
+        content: attr(data-label) ": ";
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -1805,6 +2142,46 @@ input[type="file"] {
 }
 
 /* Mobile Responsiveness for Billing App */
+/* Enhanced Responsive Design for Billing App */
+@media (max-width: 1200px) {
+    .billing-container {
+        max-width: 95%;
+        margin: 15px auto;
+        padding: 25px;
+    }
+    
+    .billing-section {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 992px) {
+    .billing-container {
+        max-width: 98%;
+        margin: 10px auto;
+        padding: 20px;
+    }
+    
+    .billing-section {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .billing-logo {
+        width: 120px;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .billing-header h1 {
+        font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    }
+    
+    .billing-header h2 {
+        font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    }
+}
+
 @media (max-width: 768px) {
     .billing-app {
         padding-top: 70px;
@@ -1812,9 +2189,127 @@ input[type="file"] {
     }
     
     .billing-container {
-        margin: 10px;
-        padding: 15px;
+        margin: 8px;
+        padding: 18px;
         border-radius: 15px;
+    }
+    
+    .billing-logo {
+        width: 100px;
+        top: 12px;
+        right: 12px;
+    }
+    
+    .billing-header {
+        margin-bottom: 25px;
+        padding-top: 15px;
+    }
+    
+    .billing-header h1 {
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        margin-bottom: 8px;
+    }
+    
+    .billing-header h2 {
+        font-size: clamp(0.8rem, 2.2vw, 1rem);
+        line-height: 1.3;
+    }
+    
+    .section {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .section h2 {
+        font-size: clamp(1.1rem, 2.8vw, 1.3rem);
+        margin-bottom: 15px;
+    }
+    
+    .customer-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+    
+    input, select, textarea {
+        padding: 10px;
+        font-size: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 100px;
+        margin: 3px;
+    }
+    
+    .back-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+    
+    .items-table {
+        margin-top: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .items-table th, .items-table td {
+        padding: 12px 8px;
+    }
+    
+    .items-table th {
+        font-size: 0.8rem;
+    }
+    
+    .total-section {
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .total-section h3 {
+        font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    }
+    
+    .actions {
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .actions .btn {
+        padding: 12px 18px;
+        font-size: 14px;
+        min-width: 110px;
+    }
+    
+    .bill-summary-row {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .bill-summary-row .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .bill-summary-row .form-group label {
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+    
+    .bill-summary-row .form-group input {
+        width: 100%;
+        max-width: 150px;
     }
 }
 
@@ -1826,8 +2321,116 @@ input[type="file"] {
     
     .billing-container {
         margin: 5px;
-        padding: 10px;
+        padding: 15px;
         border-radius: 12px;
+    }
+    
+    .billing-logo {
+        width: 80px;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .billing-header {
+        margin-bottom: 20px;
+        padding-top: 10px;
+    }
+    
+    .billing-header h1 {
+        font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+        margin-bottom: 6px;
+    }
+    
+    .billing-header h2 {
+        font-size: clamp(0.7rem, 2vw, 0.9rem);
+        line-height: 1.2;
+    }
+    
+    .section {
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .section h2 {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        margin-bottom: 12px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .form-group label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    input, select, textarea {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        min-width: 90px;
+        margin: 2px;
+    }
+    
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .items-table {
+        margin-top: 12px;
+        font-size: 0.8rem;
+    }
+    
+    .items-table th, .items-table td {
+        padding: 8px 6px;
+    }
+    
+    .items-table th {
+        font-size: 0.75rem;
+    }
+    
+    .total-section {
+        padding: 12px;
+        margin-top: 12px;
+    }
+    
+    .total-section h3 {
+        font-size: clamp(1rem, 2.3vw, 1.2rem);
+    }
+    
+    .actions {
+        gap: 8px;
+        margin-top: 15px;
+        flex-direction: column;
+    }
+    
+    .actions .btn {
+        padding: 10px 16px;
+        font-size: 13px;
+        min-width: 100px;
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .bill-summary-row {
+        gap: 12px;
+    }
+    
+    .bill-summary-row .form-group input {
+        max-width: 120px;
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+    
+    .service-charges-display {
+        font-size: 0.9rem;
     }
 }
 
@@ -1838,21 +2441,180 @@ input[type="file"] {
     }
     
     .billing-container {
-        margin: 5px;
-        padding: 8px;
+        margin: 3px;
+        padding: 12px;
         border-radius: 10px;
+    }
+    
+    .billing-logo {
+        width: 70px;
+        top: 8px;
+        right: 8px;
+    }
+    
+    .billing-header {
+        margin-bottom: 15px;
+        padding-top: 8px;
+    }
+    
+    .billing-header h1 {
+        font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+        margin-bottom: 5px;
+    }
+    
+    .billing-header h2 {
+        font-size: clamp(0.65rem, 1.8vw, 0.8rem);
+        line-height: 1.1;
+    }
+    
+    .section {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .section h2 {
+        font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+        margin-bottom: 10px;
+    }
+    
+    .form-group {
+        margin-bottom: 8px;
+    }
+    
+    .form-group label {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+    
+    input, select, textarea {
+        padding: 7px 8px;
+        font-size: 13px;
+    }
+    
+    .btn {
+        padding: 7px 14px;
+        font-size: 12px;
+        min-width: 80px;
+        margin: 2px;
+    }
+    
+    .back-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+    
+    .items-table {
+        margin-top: 10px;
+        font-size: 0.75rem;
+    }
+    
+    .items-table th, .items-table td {
+        padding: 6px 4px;
+    }
+    
+    .items-table th {
+        font-size: 0.7rem;
+    }
+    
+    .total-section {
+        padding: 10px;
+        margin-top: 10px;
+    }
+    
+    .total-section h3 {
+        font-size: clamp(0.9rem, 2.1vw, 1.1rem);
+    }
+    
+    .actions {
+        gap: 6px;
+        margin-top: 12px;
+    }
+    
+    .actions .btn {
+        padding: 8px 14px;
+        font-size: 12px;
+        min-width: 90px;
+    }
+    
+    .bill-summary-row {
+        gap: 10px;
+    }
+    
+    .bill-summary-row .form-group input {
+        max-width: 100px;
+        padding: 5px 6px;
+        font-size: 12px;
+    }
+    
+    .service-charges-display {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .billing-container {
+        margin: 2px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    .billing-logo {
+        width: 60px;
+        top: 6px;
+        right: 6px;
+    }
+    
+    .billing-header h1 {
+        font-size: clamp(1rem, 2.3vw, 1.4rem);
+    }
+    
+    .billing-header h2 {
+        font-size: clamp(0.6rem, 1.6vw, 0.75rem);
+    }
+    
+    .section {
+        padding: 10px;
+    }
+    
+    .section h2 {
+        font-size: clamp(0.8rem, 2vw, 1rem);
+    }
+    
+    .btn {
+        padding: 6px 12px;
+        font-size: 11px;
+        min-width: 70px;
+    }
+    
+    .items-table {
+        font-size: 0.7rem;
+    }
+    
+    .items-table th, .items-table td {
+        padding: 4px 3px;
+    }
+    
+    .actions .btn {
+        padding: 6px 12px;
+        font-size: 11px;
+        min-width: 80px;
     }
 }
 
 /* Mobile Responsiveness for Stock Management */
 @media (max-width: 768px) {
     .form-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        flex-direction: column;
+        gap: 1rem;
     }
     
     .add-stock-form {
         padding: 20px;
+    }
+    
+    .add-stock-form h2 {
+        font-size: clamp(1.2rem, 3vw, 1.4rem);
     }
     
     .stock-container {
@@ -1890,7 +2652,7 @@ input[type="file"] {
     }
     
     .add-stock-form h2 {
-        font-size: 1.2rem;
+        font-size: clamp(1.1rem, 2.8vw, 1.3rem);
     }
     
     .stock-table {
@@ -1906,6 +2668,22 @@ input[type="file"] {
         min-width: 120px;
         padding: 10px 20px;
         font-size: 0.9rem;
+    }
+    
+    /* Enhanced mobile responsive rules for form-actions buttons */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+    
+    .form-actions .btn {
+        min-width: 100px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        white-space: nowrap;
     }
     
     .btn-small {
@@ -1931,6 +2709,10 @@ input[type="file"] {
         padding: 12px;
     }
     
+    .add-stock-form h2 {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+    }
+    
     .stock-table {
         font-size: 0.7rem;
     }
@@ -1944,6 +2726,22 @@ input[type="file"] {
         top: 10px;
         right: 15px;
         font-size: 1.5rem;
+    }
+    
+    /* Enhanced mobile responsive rules for form-actions buttons at 480px */
+    .form-actions {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+    
+    .form-actions .btn {
+        min-width: 90px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        white-space: nowrap;
     }
 }
 
@@ -2036,6 +2834,22 @@ input[type="file"] {
     margin: 0;
     padding-top: 80px;
     box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* Ensure active sections are above mobile menu overlay */
+#billingApp[style*="display: block"],
+#stockSection[style*="display: block"],
+#customerDataSection[style*="display: block"],
+#salesReportSection[style*="display: block"] {
+    z-index: 1001;
+    position: relative;
+    top: 0;
+    left: 0;
 }
 
 @media (max-width: 700px) {
@@ -2056,3 +2870,66 @@ input[type="file"] {
         padding: 0 !important;
     }
 } 
+
+/* --- Unified Card Form Design for Add Stock & Add New Item --- */
+.card-form, .add-stock-form, .add-item-form {
+    background: #f8f9ff;
+    border: 2px solid #e0e0f7;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px 0 rgba(122, 111, 240, 0.10);
+    padding: 32px 28px 24px 28px;
+    margin-bottom: 32px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+}
+.card-form:focus-within, .card-form:hover,
+.add-stock-form:focus-within, .add-stock-form:hover,
+.add-item-form:focus-within, .add-item-form:hover {
+    box-shadow: 0 8px 32px 0 rgba(122, 111, 240, 0.16);
+    border-color: #bdb6f6;
+}
+.card-form .card-header,
+.add-stock-form > .card-header,
+.add-item-form > .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+.card-form h2,
+.add-stock-form h2,
+.add-item-form h2 {
+    color: var(--primary-violet);
+    margin: 0;
+    font-size: clamp(1.3rem, 3vw, 1.5rem);
+    font-weight: 700;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.card-form .btn,
+.add-stock-form .btn,
+.add-item-form .btn {
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+@media (max-width: 768px) {
+  .card-form, .add-stock-form, .add-item-form {
+    padding: 18px 8px 18px 8px;
+    border-radius: 14px;
+  }
+  .card-form .card-header,
+  .add-stock-form > .card-header,
+  .add-item-form > .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+}
+@media (max-width: 480px) {
+  .card-form, .add-stock-form, .add-item-form {
+    padding: 10px 4px 14px 4px;
+    border-radius: 10px;
+  }
+} 
+
+ 

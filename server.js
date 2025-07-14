@@ -161,19 +161,35 @@ app.post('/api/products',  async (req, res) => {
 // Stock API
 app.get('/api/stock', async (req, res) => {
     try {
-        const stock = await Stock.find({}).populate('product_id', 'id name brand mrp purchased_price');
-        const flatStock = stock
-            .filter(s => s.product_id)
-            .map(s => ({
-                stock_id: s._id,
-                product_id: s.product_id._id,
-                name: s.product_id.name,
-                brand: s.product_id.brand,
-                mrp: s.product_id.mrp,
-                purchased_price: s.product_id.purchased_price,
-                quantity: s.quantity,
-                min_quantity: s.min_quantity
-            }));
+        // Get all products first
+        const allProducts = await Product.find({});
+        
+        // Get all stock entries
+        const stockEntries = await Stock.find({}).populate('product_id', 'id name brand mrp purchased_price');
+        
+        // Create a map of product_id to stock entry
+        const stockMap = new Map();
+        stockEntries.forEach(s => {
+            if (s.product_id) {
+                stockMap.set(s.product_id._id.toString(), s);
+            }
+        });
+        
+        // Combine all products with their stock info
+        const flatStock = allProducts.map(product => {
+            const stockEntry = stockMap.get(product._id.toString());
+            return {
+                stock_id: stockEntry ? stockEntry._id : null,
+                product_id: product._id,
+                name: product.name,
+                brand: product.brand,
+                mrp: product.mrp,
+                purchased_price: product.purchased_price,
+                quantity: stockEntry ? stockEntry.quantity : 0,
+                min_quantity: stockEntry ? stockEntry.min_quantity : 10
+            };
+        });
+        
         res.json(flatStock);
     } catch (err) {
         res.status(500).json({ error: 'Database error while fetching stock' });
