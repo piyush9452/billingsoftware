@@ -1177,16 +1177,27 @@ async function fetchAndDisplayCustomerData() {
     try {
         // Fetch all customers
         const customers = await fetch(`${API_BASE_URL}/customers`).then(r => r.json());
-        // Fetch all bills to get last purchase date
+        // Fetch all bills to get last purchase date, total bills, and total value
         const bills = await fetch(`${API_BASE_URL}/bills`).then(r => r.json());
-        // Map phone to last purchase date
-        const lastPurchaseMap = {};
+        // Map phone to last purchase date, total bills, and total value
+        const customerStats = {};
         bills.forEach(bill => {
             if (bill.customer_phone) {
-                const prev = lastPurchaseMap[bill.customer_phone];
+                const phone = bill.customer_phone;
                 const billDate = bill.bill_date || bill.created_at;
-                if (!prev || new Date(billDate) > new Date(prev)) {
-                    lastPurchaseMap[bill.customer_phone] = billDate;
+                if (!customerStats[phone]) {
+                    customerStats[phone] = {
+                        lastPurchase: billDate,
+                        totalBills: 1,
+                        totalValue: bill.total_amount || 0
+                    };
+                } else {
+                    // Update last purchase date if newer
+                    if (new Date(billDate) > new Date(customerStats[phone].lastPurchase)) {
+                        customerStats[phone].lastPurchase = billDate;
+                    }
+                    customerStats[phone].totalBills += 1;
+                    customerStats[phone].totalValue += bill.total_amount || 0;
                 }
             }
         });
@@ -1194,11 +1205,14 @@ async function fetchAndDisplayCustomerData() {
         const tbody = document.getElementById('customerDataTableBody');
         tbody.innerHTML = '';
         customers.forEach(cust => {
+            const stats = customerStats[cust.phone] || { lastPurchase: null, totalBills: 0, totalValue: 0 };
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td data-label="Name">${cust.name || ''}</td>
                 <td data-label="WhatsApp Number">${cust.phone || ''}</td>
-                <td data-label="Last Purchase Date">${lastPurchaseMap[cust.phone] ? new Date(lastPurchaseMap[cust.phone]).toLocaleDateString() : '-'}</td>
+                <td data-label="Last Purchase Date">${stats.lastPurchase ? new Date(stats.lastPurchase).toLocaleDateString() : '-'}</td>
+                <td data-label="Total Bills">${stats.totalBills}</td>
+                <td data-label="Total Value So Far">₹${stats.totalValue.toFixed(2)}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -1210,19 +1224,46 @@ async function fetchAndDisplayCustomerData() {
 // --- Fetch and Populate Sales Report ---
 async function fetchAndDisplaySalesReport() {
     try {
-        const sales = await fetch(`${API_BASE_URL}/reports/sales`).then(r => r.json());
+        // Fetch all stock
+        const stock = await fetch(`${API_BASE_URL}/stock`).then(r => r.json());
+        // Fetch all bills
+        const bills = await fetch(`${API_BASE_URL}/bills`).then(r => r.json());
+        // 1. Pending Stock Value: sum of (purchased_price * quantity) for all stock
+        let pendingStockValue = 0;
+        let totalStockQty = 0;
+        stock.forEach(item => {
+            const qty = item.quantity || 0;
+            const price = item.purchased_price || 0;
+            pendingStockValue += price * qty;
+            totalStockQty += qty;
+        });
+        // 2. Total Sales Till Date: sum of all bill total_amount
+        let totalSalesTillDate = 0;
+        bills.forEach(bill => {
+            totalSalesTillDate += bill.total_amount || 0;
+        });
+        // 3. Total Sales This Month: sum of bill total_amount for bills in current month
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        let totalSalesThisMonth = 0;
+        bills.forEach(bill => {
+            const billDate = bill.bill_date ? new Date(bill.bill_date) : null;
+            if (billDate && billDate.getMonth() === thisMonth && billDate.getFullYear() === thisYear) {
+                totalSalesThisMonth += bill.total_amount || 0;
+            }
+        });
+        // Populate table (single row)
         const tbody = document.getElementById('salesReportTableBody');
         tbody.innerHTML = '';
-        sales.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Date">${row.date}</td>
-                <td data-label="Total Bills">${row.total_bills}</td>
-                <td data-label="Total Sales (₹)">₹${row.total_sales.toFixed(2)}</td>
-                <td data-label="Total Items Sold">${row.total_items_sold}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td data-label="Pending Stock Value (₹)">₹${pendingStockValue.toFixed(2)}</td>
+            <td data-label="Total Stock Qty">${totalStockQty}</td>
+            <td data-label="Total Sales Till Date (₹)">₹${totalSalesTillDate.toFixed(2)}</td>
+            <td data-label="Total Sales This Month (₹)">₹${totalSalesThisMonth.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
     } catch (err) {
         showMessage('Error loading sales report', 'error');
     }
