@@ -14,6 +14,12 @@ const stockSchema = new mongoose.Schema({
     min_quantity: {
         type: Number,
         default: 10
+    },
+
+    franchise_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: { 
@@ -22,4 +28,4 @@ const stockSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Stock', stockSchema); 
+module.exports = mongoose.model('Stock', stockSchema);

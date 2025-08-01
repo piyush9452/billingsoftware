@@ -12,45 +12,63 @@
     <div id="homePage" class="home-page">
         <!-- Navigation -->
         <nav class="navbar">
-            <div class="nav-container">
-                <div class="logo">
-                    <img src="/images/logo.png" alt="Smart Billing Logo">
-                </div>
-                
-                <!-- Hamburger Menu Button for Mobile -->
-                <div class="hamburger-menu" onclick="toggleMobileMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                
-                <!-- Mobile Menu Overlay -->
-                <div class="mobile-menu-overlay" id="mobileMenuOverlay">
-                    <ul class="nav-links">
-                        <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
-                        <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
-                        <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
-                        <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
-                        <li><a class="customer-data-btn" href="#" onclick="handleMobileCustomerData()">Customer Data</a></li>
-                        <li><a class="sales-report-btn" href="#" onclick="handleMobileSalesReport()">Sales Report</a></li>
-                        <li><a class="add-stock-btn" href="#" onclick="handleMobileStock()">Stock</a></li>
-                        <li><a class="start-billing-btn" href="#" onclick="handleMobileStartBilling()">Start Billing</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Desktop Navigation -->
-                <ul class="nav-links desktop-nav">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                    <li><a class="customer-data-btn" href="#" onclick="showCustomerData()">Customer Data</a></li>
-                    <li><a class="sales-report-btn" href="#" onclick="showSalesReport()">Sales Report</a></li>
-                    <li><a class="add-stock-btn" href="#" onclick="showStock()">Stock</a></li>
-                    <li><a class="start-billing-btn" href="#" onclick="showBillingApp()">Start Billing</a></li>
-                </ul>
-            </div>
-        </nav>
+  <div class="nav-container">
+    <div class="logo">
+      <img src="/images/logo.png" alt="Smart Billing Logo">
+    </div>
+
+    <!-- Hamburger for mobile -->
+    <div class="hamburger-menu" onclick="toggleMobileMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+      <ul class="nav-links">
+        <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
+        <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
+        <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
+        <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
+
+        <div id="mobileAuthButtons">
+          <li><a href="/registration.html" class="login-btn" onclick="closeMobileMenu()">Login / Register</a></li>
+        </div>
+
+        <div id="mobileUserButtons" style="display: none;">
+          <li><a href="#" class="customer-data-btn" onclick="handleMobileCustomerData()">Customer Data</a></li>
+          <li><a href="#" class="sales-report-btn" onclick="handleMobileSalesReport()">Sales Report</a></li>
+          <li><a href="#" class="add-stock-btn" onclick="handleMobileStock()">Stock</a></li>
+          <li><a href="#" class="start-billing-btn" onclick="handleMobileStartBilling()">Start Billing</a></li>
+          <li><a href="#" class="logout-btn" onclick="handleLogout()">Logout</a></li>
+        </div>
+      </ul>
+    </div>
+
+    <!-- DESKTOP MENU -->
+    <ul class="nav-links desktop-nav">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+
+      <div id="desktopAuthButtons" style="margin-left: auto;">
+        <li><a href="/registration.html" class="login-btn">Login / Register</a></li>
+      </div>
+
+      <div id="desktopUserButtons" style="display: none; margin-left: auto;">
+        <li><a href="#" class="customer-data-btn" onclick="showCustomerData()">Customer Data</a></li>
+        <li><a href="#" class="sales-report-btn" onclick="showSalesReport()">Sales Report</a></li>
+        <li><a href="#" class="add-stock-btn" onclick="showStock()">Stock</a></li>
+        <li><a href="#" class="start-billing-btn" onclick="showBillingApp()">Start Billing</a></li>
+        <li><a href="#" class="logout-btn" onclick="handleLogout()">Logout</a></li>
+      </div>
+    </ul>
+  </div>
+</nav>
+
+
 
         <!-- Hero Section -->
         <section id="home" class="hero">
@@ -59,7 +77,7 @@
                     <h1>Smart Billing Made Simple</h1>
                     <p>Professional billing system with PDF generation and WhatsApp integration. Streamline your business operations with our modern billing solution.</p>
                     <div class="hero-buttons">
-                        <button class="btn-primary" onclick="showBillingApp()">Start Billing Now</button>
+                        <button id="startBillingBtn" class="btn-primary" onclick="showBillingApp()">Start Billing Now</button>
                         <a href="#features" class="btn-secondary">Learn More</a>
                     </div>
                 </div>
@@ -170,9 +188,10 @@
             <div class="cta-container">
                 <h2>Ready to Transform Your Billing?</h2>
                 <p>Join thousands of businesses already using our smart billing system to streamline their operations and improve customer satisfaction.</p>
-                <button class="btn-primary" onclick="showBillingApp()">Get Started Today</button>
+                <button id="getStartedBtn" class="btn-primary" onclick="showBillingApp()">Get Started Today</button>
             </div>
         </section>
+
 
         <!-- Footer -->
         <footer id="contact" class="footer">
@@ -211,7 +230,7 @@
             
             <div class="billing-header">
                 <h1>INVOICE</h1>
-                <h2>Dipdips Franchisee: Buddhadeb Mondal (Garg House)</h2>
+                <h2 id="franchisee-info">Dipdips Franchisee: <span id="franchiseName"></span></h2>
             </div>
 
             <div class="customer-section">

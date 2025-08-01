@@ -121,8 +121,8 @@ body {
     height: 100vh;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
-    z-index: 1000;
-    display: none;
+    z-index: 2000; /* Ensure it's above everything */
+    display: none; /* Hidden by default */
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -132,56 +132,78 @@ body {
     padding: 80px 2rem 2rem;
 }
 
+/* Active class when menu is open */
 .mobile-menu-overlay.active {
+    display: flex;
     opacity: 1;
     visibility: visible;
 }
 
+/* Navigation links inside overlay */
 .mobile-menu-overlay .nav-links {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    margin-bottom: 3rem;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
     text-align: center;
+    width: 100%;
 }
 
+/* Each link item */
 .mobile-menu-overlay .nav-links li {
     list-style: none;
 }
 
+/* Link appearance */
 .mobile-menu-overlay .nav-links a {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--text-dark);
     text-decoration: none;
-    transition: color 0.3s ease;
-    padding: 0.8rem 1.5rem;
-    border-radius: 10px;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    background: var(--primary-gradient);
+    color: #fff;
     display: block;
+    width: 100%;
+    max-width: 280px;
+    box-shadow: 0 4px 12px var(--shadow-light);
 }
 
+/* Hover effect */
 .mobile-menu-overlay .nav-links a:hover {
-    color: var(--primary-violet);
-    background: rgba(122, 111, 240, 0.1);
+    background: var(--accent-gradient);
+    color: #fff;
+    transform: translateY(-2px);
 }
 
+/* Buttons (like logout, register, etc.) */
 .mobile-menu-overlay .nav-buttons {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
 }
 
 .mobile-menu-overlay .nav-buttons button {
     width: 100%;
     padding: 12px 24px;
     font-size: 1rem;
+    font-weight: 600;
     border-radius: 50px;
     border: none;
-    font-weight: 600;
     cursor: pointer;
+    background: var(--primary-gradient);
+    color: #fff;
+    box-shadow: 0 3px 10px var(--shadow-light);
     transition: all 0.3s ease;
+}
+
+.mobile-menu-overlay .nav-buttons button:hover {
+    background: var(--accent-gradient);
+    transform: translateY(-2px);
 }
 
 /* Desktop Navigation */
@@ -227,7 +249,8 @@ body {
 .nav-links a.customer-data-btn,
 .nav-links a.sales-report-btn,
 .nav-links a.add-stock-btn,
-.nav-links a.start-billing-btn {
+.nav-links a.start-billing-btn,
+.nav-links a.login-btn {
     background: var(--primary-gradient);
     color: #fff;
     font-weight: 600;
@@ -243,7 +266,8 @@ body {
 .nav-links a.customer-data-btn:hover,
 .nav-links a.sales-report-btn:hover,
 .nav-links a.add-stock-btn:hover,
-.nav-links a.start-billing-btn:hover {
+.nav-links a.start-billing-btn:hover,
+.nav-links a.login-btn:hover {
     background: var(--accent-gradient);
     color: #fff;
     box-shadow: 0 4px 16px var(--shadow-medium);
@@ -300,6 +324,8 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(122, 111, 240, 0.18);
 }
+
+
 
 /* Hero Section */
 .hero {
@@ -2932,4 +2958,28 @@ input[type="file"] {
   }
 } 
 
- 
+ .action-button {
+  padding: 6px 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.approve-btn {
+  background-color: #28a745;
+}
+
+.approve-btn:hover {
+  background-color: #218838;
+}
+
+.reject-btn {
+  background-color: #dc3545;
+}
+
+.reject-btn:hover {
+  background-color: #c82333;
+}

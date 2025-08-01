@@ -22,7 +22,13 @@ const stockTransactionSchema = new mongoose.Schema({
     date: Date,
     brand: String,
     mrp: Number,
-    purchased_price: Number
+    purchased_price: Number,
+
+    franchise_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
 }, {
     timestamps: { 
         createdAt: 'created_at', 
@@ -30,4 +36,4 @@ const stockTransactionSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('StockTransaction', stockTransactionSchema); 
+module.exports = mongoose.model('StockTransaction', stockTransactionSchema);

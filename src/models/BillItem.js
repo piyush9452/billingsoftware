@@ -33,6 +33,12 @@ const billItemSchema = new mongoose.Schema({
     total: {
         type: Number,
         required: true
+    },
+
+    franchise_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: { 
@@ -41,4 +47,4 @@ const billItemSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('BillItem', billItemSchema); 
+module.exports = mongoose.model('BillItem', billItemSchema);

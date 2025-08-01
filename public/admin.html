@@ -6,6 +6,35 @@
     <title>Admin Panel - Smart Billing System</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
+
+            .franchise-dropdown {
+            margin-left: auto;
+            margin-right: 20px;
+            padding: 8px 0;
+        }
+
+        .styled-dropdown {
+            padding: 8px 14px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: border-color 0.3s ease;
+            min-width: 220px;
+        }
+
+        .styled-dropdown:focus {
+            border-color: #7a6ff0;
+            outline: none;
+            background-color: #fff;
+        }
+
+        .styled-dropdown option {
+            padding: 8px;
+        }
+
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -166,6 +195,65 @@
             font-weight: bold;
             color: #007bff;
         }
+
+        /* Improve responsiveness on small screens */
+@media (max-width: 768px) {
+    .admin-tabs {
+        flex-wrap: wrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 0 1rem;
+        gap: 10px;
+    }
+
+    .admin-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-tab {
+        flex: 1 0 auto;
+        min-width: 140px;
+        text-align: center;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .admin-container {
+        padding: 10px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .login-form {
+        width: 90%;
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        position: static;
+        display: block;
+        margin: 10px auto;
+    }
+
+    #updateStockForm {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #updateStockForm .form-group {
+        width: 100%;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -188,7 +276,8 @@
         
         <div class="admin-container">
             <div class="admin-header">
-                <h1>Dipdips Franchisee: Buddhadeb Mondal (Garg House)</h1>
+                <h1 id="selectedFranchiseHeading">Dipdips Franchisee </h1>
+
                 <p>Invoice Management System - Admin Panel</p>
             </div>
 
@@ -198,6 +287,13 @@
                 <button class="admin-tab" onclick="showTab('stock')">Stock Management</button>
                 <button class="admin-tab" onclick="showTab('customers')">Customers</button>
                 <button class="admin-tab" onclick="showTab('reports')">Reports</button>
+                <button class="admin-tab" onclick="showTab('notifications')">Franchise Approvals</button>
+
+                <div class="franchise-dropdown">
+                    <select id="approvedFranchiseSelect" onchange="onFranchiseChange()" class="styled-dropdown">
+                        <option value="">ALL</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Dashboard Tab -->
@@ -277,9 +373,20 @@
                 <h3>Reports</h3>
                 <p>Detailed reports will be available here.</p>
             </div>
+
+
+            <!-- Franchise Approvals Tab -->
+            <div id="notifications" class="admin-content">
+                <h3>Franchise Approvals</h3>
+                <div id="franchiseApprovalList">
+                    <!-- Franchise approval requests will be loaded here -->
+            </div>
+</div>
+
         </div>
     </div>
 
     <script src="/js/admin.js"></script>
+    
 </body>
 </html> 

@@ -28,7 +28,13 @@ const billSchema = new mongoose.Schema({
         type: String,
         default: 'completed'
     },
-    notes: String
+    notes: String,
+
+    franchise_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
 }, {
     timestamps: { 
         createdAt: 'created_at', 
@@ -36,4 +42,4 @@ const billSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Bill', billSchema); 
+module.exports = mongoose.model('Bill', billSchema);

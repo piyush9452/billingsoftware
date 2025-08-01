@@ -17,6 +17,7 @@ const Product = require('./src/models/Product');
 const Stock = require('./src/models/Stock');
 const StockTransaction = require('./src/models/StockTransaction');
 const User = require('./src/models/User');
+const Franchisee = require('./src/models/Franchisee');
 
 // Database connection
 const connectDB = require('./src/config/database');
@@ -67,8 +68,6 @@ app.use(express.static('public'));
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Authentication middleware
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -79,281 +78,656 @@ const authenticateToken = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = await User.findById(decoded.id).select('-password_hash');
-        if (!req.user) {
+
+        // Try to find in User model first
+        let user = await User.findById(decoded.id).select('-password_hash');
+        if (!user) {
+            // If not found, check Franchisee model
+            user = await Franchisee.findById(decoded.id).select('-password');
+        }
+
+        if (!user) {
             return res.status(401).json({ error: 'User not found' });
         }
+
+        req.user = user;
+        req.role = decoded.role || 'franchisee';  // fallback if role isn't set
         next();
     } catch (err) {
         return res.status(403).json({ error: 'Invalid token' });
     }
 };
 
-// Authentication routes
+
+const authorizeAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({ error: 'Forbidden: Admins only' });
+    }
+};
+//1. register for franchise
+app.post('/api/register', async (req, res) => {
+  try {
+    const { franchise_name, location, phone_number, password } = req.body;
+    if (!franchise_name || !location || !phone_number || !password) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    const existing = await Franchisee.findOne({ franchise_name });
+    if (existing) {
+      return res.status(400).json({ error: 'Franchise name already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const franchisee = new Franchisee({
+      franchise_name,
+      location,
+      phone_number,
+      password: hashedPassword,
+      pending_approval: true
+    });
+
+    await franchisee.save();
+    res.status(201).json({ message: 'Registration submitted. Awaiting admin approval.' });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// 2. Login for franchisee
 app.post('/api/login', async (req, res) => {
+  try {
+    const { franchise_name, password } = req.body;
+    if (!franchise_name || !password) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    const franchisee = await Franchisee.findOne({ franchise_name });
+    if (!franchisee) {
+      return res.status(400).json({ error: 'Invalid credentials.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, franchisee.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials.' });
+    }
+
+    // ✳️ Check for account status
+    if (franchisee.status === 'pending') {
+      return res.status(403).json({ error: 'Account approval is still pending.' });
+    }
+    if (franchisee.status === 'rejected') {
+      return res.status(403).json({ error: 'Your registration has been rejected.' });
+    }
+
+    // ✅ Login allowed for approved users
+    const token = jwt.sign(
+      { id: franchisee._id, role: 'franchisee' },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      message: 'Franchisee login successful.',
+      token,
+      franchisee: {
+        id: franchisee._id,
+        franchise_name: franchisee.franchise_name,
+        location: franchisee.location,
+        phone_number: franchisee.phone_number
+      }
+    });
+  } catch (err) {
+    console.error('Franchisee login error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+
+// 3. Login for admin
+app.post('/api/adminlogin', async (req, res) => {
+  try {
     const { username, password } = req.body;
-
-    try {
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const validPassword = await bcrypt.compare(password, user.password_hash);
-        if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
-        res.json({ token, user: { id: user._id, username: user.username, role: user.role } });
-
-    } catch (err) {
-        res.status(500).json({ error: 'Database error' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'All fields are required.' });
     }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+
+    res.json({
+      message: 'Admin login successful.',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// 4. Get all franchisees (Admin only)
+app.get('/api/all', authenticateToken, authorizeAdmin, async (req, res) => {
+  try {
+    const franchisees = await Franchisee.find({}, '-password').sort({ createdAt: -1 });
+    res.json(franchisees);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// 5. Approve a franchisee (Admin only)
+app.post('/api/approve', authenticateToken, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'Franchisee ID required.' });
+
+    const franchisee = await Franchisee.findByIdAndUpdate(id, { pending_approval: false }, { new: true });
+    if (!franchisee) return res.status(404).json({ error: 'Franchisee not found.' });
+
+    res.json({ message: 'Franchisee approved.', franchisee });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+// approved franchise
+app.get('/api/approved-franchises', async (req, res) => {
+  try {
+    const approvedFranchises = await Franchisee.find({ pending_approval: false });
+    res.json(approvedFranchises);
+  } catch (err) {
+    console.error('Error fetching approved franchises:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// 6. Disapprove/Delete a franchisee (Admin only)
+app.post('/api/disapprove', authenticateToken, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'Franchisee ID required.' });
+
+    const franchisee = await Franchisee.findByIdAndDelete(id);
+    if (!franchisee) return res.status(404).json({ error: 'Franchisee not found.' });
+
+    res.json({ message: 'Franchisee disapproved and deleted.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+//franchise status
+app.patch('/api/franchise/:id/status', authenticateToken, authorizeAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const franchisee = await Franchisee.findByIdAndUpdate(
+  id,
+  {
+    status,
+    pending_approval: status !== 'approved'
+  },
+  { new: true }
+);
+
+    if (!franchisee) return res.status(404).json({ error: 'Franchisee not found' });
+
+    res.json({ message: `Franchisee ${status}`, franchisee });
+  } catch (err) {
+    console.error('Update status error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 
-// Products API
-app.get('/api/products', async (req, res) => {
-    try {
-        const products = await Product.aggregate([
+app.get('/api/franchise/:id', async (req, res) => {
+  try {
+    const franchise = await Franchisee.findById(req.params.id);
+    if (!franchise) {
+      return res.status(404).json({ error: 'Franchise not found' });
+    }
+    res.json(franchise);
+  } catch (err) {
+    console.error('Error fetching franchise:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/franchise-approvals', authenticateToken, authorizeAdmin, async (req, res) => {
+  try {
+    const franchisees = await Franchisee.find({}, '-password').sort({ createdAt: -1 });
+    res.json(franchisees);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+//Product API
+app.get('/api/products', authenticateToken, async (req, res) => {
+  try {
+    const isAdmin = req.user.role === 'admin';
+    const franchise_id = isAdmin ? (req.query.franchise_id || req.user._id) : req.user._id;
+    const franchiseFilter = franchise_id ? { franchise_id } : {};
+
+    const products = await Product.aggregate([
+      { $match: franchiseFilter },
+      {
+        $lookup: {
+          from: 'stocks',
+          let: { productId: '$_id' },
+          pipeline: [
             {
-                $lookup: {
-                    from: 'stocks',
-                    localField: '_id',
-                    foreignField: 'product_id',
-                    as: 'stockInfo'
-                }
-            },
-            {
-                $unwind: { path: '$stockInfo', preserveNullAndEmptyArrays: true }
-            },
-            {
-                $addFields: {
-                    quantity: { $ifNull: ['$stockInfo.quantity', 0] }
-                }
-            },
-            {
-                $project: { stockInfo: 0 }
-            },
-            {
-                $sort: { name: 1 }
+              $match: {
+                $expr: { $eq: ['$product_id', '$$productId'] },
+                ...franchiseFilter
+              }
             }
-        ]);
-        res.json(products);
-    } catch (err) {
-        res.status(500).json({ error: 'Database error while fetching products' });
-    }
+          ],
+          as: 'stockInfo'
+        }
+      },
+      { $unwind: { path: '$stockInfo', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          quantity: { $ifNull: ['$stockInfo.quantity', 0] }
+        }
+      },
+      { $project: { stockInfo: 0 } },
+      { $sort: { name: 1 } }
+    ]);
+
+    res.json(products);
+  } catch (err) {
+    console.error('Product fetch error:', err.message);
+    res.status(500).json({ error: 'Database error while fetching products' });
+  }
 });
 
-app.post('/api/products',  async (req, res) => {
-    const { name, brand, mrp, purchased_price, description, category } = req.body;
+
+
+
+app.post('/api/products', authenticateToken, async (req, res) => {
+    const {
+        name,
+        category,
+        brand,
+        mrp,
+        purchased_price,
+        selling_price,
+        hsn,
+        gst_rate,
+        unit,
+        description,
+        franchise_id: bodyFranchiseId
+    } = req.body;
+
     try {
-        const product = await Product.create({ name, brand, mrp, purchased_price, description, category });
-        await Stock.create({ product_id: product._id, quantity: 0 });
-        res.json({ id: product._id, message: 'Product added successfully' });
+        const franchise_id = req.isAdmin ? bodyFranchiseId : req.user._id;
+
+        if (!franchise_id) {
+            return res.status(400).json({ error: 'Franchise ID is required' });
+        }
+
+        const existingProduct = await Product.findOne({ name, franchise_id });
+        if (existingProduct) {
+            return res.status(409).json({ error: 'Product already exists for this franchise' });
+        }
+
+        const newProduct = await Product.create({
+            name,
+            category,
+            brand,
+            mrp,
+            purchased_price,
+            selling_price,
+            hsn,
+            gst_rate,
+            unit,
+            description,
+            franchise_id
+        });
+
+        res.status(201).json({ message: 'Product created successfully', product: newProduct });
     } catch (err) {
+        console.error('❌ Error creating product:', err.message);
         res.status(500).json({ error: 'Database error while creating product' });
     }
 });
 
+//stock API
+app.get('/api/stock', authenticateToken, async (req, res) => {
+  try {
+    const isAdmin = req.user.role === 'admin';
+    const franchise_id = isAdmin ? (req.query.franchise_id || null) : req.user._id;
+    const filter = franchise_id ? { franchise_id } : {};
 
-// Stock API
-app.get('/api/stock', async (req, res) => {
-    try {
-        // Get all products first
-        const allProducts = await Product.find({});
-        
-        // Get all stock entries
-        const stockEntries = await Stock.find({}).populate('product_id', 'id name brand mrp purchased_price');
-        
-        // Create a map of product_id to stock entry
-        const stockMap = new Map();
-        stockEntries.forEach(s => {
-            if (s.product_id) {
-                stockMap.set(s.product_id._id.toString(), s);
-            }
-        });
-        
-        // Combine all products with their stock info
-        const flatStock = allProducts.map(product => {
-            const stockEntry = stockMap.get(product._id.toString());
-            return {
-                stock_id: stockEntry ? stockEntry._id : null,
-                product_id: product._id,
-                name: product.name,
-                brand: product.brand,
-                mrp: product.mrp,
-                purchased_price: product.purchased_price,
-                quantity: stockEntry ? stockEntry.quantity : 0,
-                min_quantity: stockEntry ? stockEntry.min_quantity : 10
-            };
-        });
-        
-        res.json(flatStock);
-    } catch (err) {
-        res.status(500).json({ error: 'Database error while fetching stock' });
-    }
+    const allProducts = await Product.find(filter);
+    const stockEntries = await Stock.find(filter).populate('product_id', 'id name brand mrp purchased_price');
+
+    const stockMap = new Map();
+    stockEntries.forEach(s => {
+      if (s.product_id) {
+        stockMap.set(s.product_id._id.toString(), s);
+      }
+    });
+
+    const flatStock = allProducts.map(product => {
+      const stockEntry = stockMap.get(product._id.toString());
+      return {
+        stock_id: stockEntry ? stockEntry._id : null,
+        product_id: product._id,
+        name: product.name,
+        brand: product.brand,
+        mrp: product.mrp,
+        purchased_price: product.purchased_price,
+        quantity: stockEntry ? stockEntry.quantity : 0,
+        min_quantity: stockEntry ? stockEntry.min_quantity : 10
+      };
+    });
+
+    res.json(flatStock);
+  } catch (err) {
+    console.error('Stock fetch error:', err.message);
+    res.status(500).json({ error: 'Database error while fetching stock' });
+  }
 });
 
-app.post('/api/stock',  async (req, res) => {
-    const { product_id, quantity, min_quantity, notes, vendor, invoice, date, brand, mrp, purchased_price } = req.body;
+
+app.post('/api/stock', authenticateToken, async (req, res) => {
+    const {
+        product_id,
+        quantity,
+        min_quantity,
+        notes,
+        vendor,
+        invoice,
+        date,
+        brand,
+        mrp,
+        purchased_price
+    } = req.body;
+
     try {
-        await Stock.findOneAndUpdate(
-            { product_id: product_id },
-            { quantity, min_quantity: min_quantity || 10 },
-            { upsert: true }
+        const franchise_id = req.user._id;
+
+        const stock = await Stock.findOneAndUpdate(
+            { product_id: product_id, franchise_id },
+            {
+                $set: {
+                    quantity,
+                    min_quantity: min_quantity || 10
+                }
+            },
+            { upsert: true, new: true }
         );
+
         await StockTransaction.create({
             product_id,
             transaction_type: 'stock_update',
-            quantity: quantity,
+            quantity,
             notes: notes || 'Stock updated via API',
             vendor,
             invoice,
             date,
             brand,
             mrp,
-            purchased_price
+            purchased_price,
+            franchise_id
         });
+
         res.json({ message: 'Stock updated successfully' });
     } catch (err) {
+        console.error('Stock update error:', err.message);
         res.status(500).json({ error: 'Database error while updating stock' });
     }
 });
 
-app.delete('/api/stock/:id',  async (req, res) => {
+// PATCH /api/stock/:id/add - increment stock quantity
+app.delete('/api/stock/:id', authenticateToken, async (req, res) => {
     try {
         const productId = req.params.id;
-        // const stock = await Stock.findOneAndDelete({ product_id: productId });
-        const stock =   await Product.findByIdAndDelete(productId);
-        if (!stock) {
-            return res.status(404).json({ error: 'Stock item not found' });
+        const franchiseFilter = req.user.role === 'admin'
+            ? { _id: productId }
+            : { _id: productId, franchise_id: req.user._id };
+
+        // Delete product only if it belongs to this franchise (or admin)
+        const deletedProduct = await Product.findOneAndDelete(franchiseFilter);
+        if (!deletedProduct) {
+            return res.status(404).json({ error: 'Product not found or not authorized to delete' });
         }
-        await StockTransaction.deleteMany({ product_id: productId });
+
+        // Delete related stock
+        await Stock.deleteOne({ product_id: productId, franchise_id: req.user._id });
+
+        // Delete stock transactions
+        await StockTransaction.deleteMany({ product_id: productId, franchise_id: req.user._id });
+
         res.json({ message: 'Stock item deleted successfully' });
     } catch (err) {
+        console.error('Stock deletion error:', err.message);
         res.status(500).json({ error: 'Database error while deleting stock item' });
     }
 });
 
-// PATCH /api/stock/:id/add - increment stock quantity
-app.patch('/api/stock/:id/add', async (req, res) => {
+
+app.patch('/api/stock/:id/add', authenticateToken, async (req, res) => {
     const stockId = req.params.id;
     const addQty = Number(req.body.add_quantity);
+
     if (isNaN(addQty)) {
         return res.status(400).json({ error: 'add_quantity must be a number' });
     }
+
     try {
-        const stock = await Stock.findByIdAndUpdate(
-            stockId,
+        const franchiseFilter = req.user.role === 'admin'
+            ? { _id: stockId }
+            : { _id: stockId, franchise_id: req.user._id };
+
+        const stock = await Stock.findOneAndUpdate(
+            franchiseFilter,
             { $inc: { quantity: addQty } },
             { new: true }
         );
+
         if (!stock) {
-            return res.status(404).json({ error: 'Stock item not found' });
+            return res.status(404).json({ error: 'Stock item not found or access denied' });
         }
+
         await StockTransaction.create({
             product_id: stock.product_id,
             transaction_type: 'stock_add',
             quantity: addQty,
-            notes: 'Stock incremented via API'
+            notes: 'Stock incremented via API',
+            franchise_id: req.user._id
         });
+
         res.json({ message: 'Stock quantity incremented', stock });
     } catch (err) {
+        console.error('Stock increment error:', err.message);
         res.status(500).json({ error: 'Database error while incrementing stock' });
     }
 });
 
-
 // Customers API
-app.get('/api/customers', async (req, res) => {
-    try {
-        const customers = await Customer.find({}).sort({ name: 1 });
-        res.json(customers);
-    } catch (err) {
-        res.status(500).json({ error: 'Database error' });
-    }
+app.get('/api/customers', authenticateToken, async (req, res) => {
+  try {
+    const isAdmin = req.user.role === 'admin';
+    const franchise_id = isAdmin ? (req.query.franchise_id || null) : req.user._id;
+    const matchStage = franchise_id ? { franchise_id } : {};
+
+    const customers = await Customer.aggregate([
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'bills',
+          localField: '_id',
+          foreignField: 'customer_id',
+          as: 'bills'
+        }
+      },
+      {
+        $addFields: {
+          totalBills: { $size: '$bills' },
+          totalValue: { $sum: '$bills.total_amount' },
+          lastPurchaseDate: { $max: '$bills.date' }
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          phone: 1,
+          totalBills: 1,
+          totalValue: 1,
+          lastPurchaseDate: 1
+        }
+      }
+    ]);
+
+    res.json(customers);
+  } catch (err) {
+    console.error('Error fetching customers:', err.message);
+    res.status(500).json({ error: 'Failed to fetch customers' });
+  }
 });
 
-app.post('/api/customers', async (req, res) => {
+
+
+app.post('/api/customers', authenticateToken, async (req, res) => {
     const { phone, name, email, address } = req.body;
+
     try {
+        const franchise_id = req.user._id;
+
         const customer = await Customer.findOneAndUpdate(
-            { phone },
-            { name, email, address },
+            { phone, franchise_id },
+            {
+                $set: {
+                    name,
+                    email,
+                    address,
+                    franchise_id
+                }
+            },
             { new: true, upsert: true }
         );
+
         res.json({ id: customer._id, message: 'Customer saved successfully' });
     } catch (err) {
-        res.status(500).json({ error: 'Database error' });
+        console.error('Customer save error:', err.message);
+        res.status(500).json({ error: 'Database error while saving customer' });
     }
 });
 
 // Bills API
-app.get('/api/bills', async (req, res) => {
-    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 0;
-    try {
-        let query = Bill.find({})
-            .populate('customer_id', 'name phone')
-            .sort({ bill_date: -1 });
-        
-        if (limit > 0) {
-            query = query.limit(limit);
-        }
-        
-        const bills = await query;
-        res.json(bills);
-    } catch (err) {
-        res.status(500).json({ error: 'Database error' });
+app.get('/api/bills', authenticateToken, async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 0;
+
+  try {
+    const isAdmin = req.user.role === 'admin';
+    const franchise_id = isAdmin ? (req.query.franchise_id || null) : req.user._id;
+    const filter = franchise_id ? { franchise_id } : {};
+
+    let query = Bill.find(filter)
+      .populate('customer_id', 'name phone')
+      .sort({ bill_date: -1 });
+
+    if (limit > 0) {
+      query = query.limit(limit);
     }
+
+    const bills = await query;
+    res.json(bills);
+  } catch (err) {
+    console.error('Bill fetch error:', err.message);
+    res.status(500).json({ error: 'Database error while fetching bills' });
+  }
 });
 
-app.get('/api/bills/:id', async (req, res) => {
+
+app.get('/api/bills/:id', authenticateToken, async (req, res) => {
     try {
         const bill = await Bill.findById(req.params.id);
+
         if (!bill) {
             return res.status(404).json({ error: 'Bill not found' });
         }
+
+        // Restrict access if user is not admin and doesn't own the bill
+        if (req.user.role !== 'admin' && bill.franchise_id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
         const items = await BillItem.find({ bill_id: bill._id });
         res.json({ ...bill.toObject(), items });
     } catch (err) {
+        console.error('Bill fetch by ID error:', err.message);
         res.status(500).json({ error: 'Database error' });
     }
 });
 
-app.post('/api/bills', async (req, res) => {
-    const { customer_phone, customer_name, items, total_amount, total_items, notes, service_charges, discount } = req.body;
+app.post('/api/bills', authenticateToken, async (req, res) => {
+    const { customer_phone, customer_name, items, total_items, notes, service_charges, discount } = req.body;
 
-    // Calculate sum of item totals
     const itemsTotal = items.reduce((sum, item) => sum + (item.price || item.total), 0);
     const serviceCharge = service_charges || 0;
-    const Discount = req.body.discount || 0;
-
-    // Calculate the correct total amount
+    const Discount = discount || 0;
     const totalAmount = itemsTotal + serviceCharge - Discount;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
+        const franchise_id = req.user._id;
+
         let customer;
         if (customer_phone && customer_name) {
             customer = await Customer.findOneAndUpdate(
-                { phone: customer_phone },
-                { $set: { name: customer_name, email: req.body.customer_email || '', address: req.body.customer_address || '' } },
+                { phone: customer_phone, franchise_id },
+                {
+                    $set: {
+                        name: customer_name,
+                        email: req.body.customer_email || '',
+                        address: req.body.customer_address || '',
+                        franchise_id
+                    }
+                },
                 { new: true, upsert: true, session }
             );
         }
-        
+
+        // Generate bill number
         const now = moment();
         const year = now.month() < 3 ? now.year() - 1 : now.year();
         const nextYear = (year + 1).toString().slice(-2);
         const finYear = `${year}-${nextYear}`;
         const month = now.format('MM');
-        const franchiseeCode = 'DIP';
+        const franchiseeCode = req.user.username?.toUpperCase()?.slice(0, 3) || 'FRN';
 
-        const count = await Bill.countDocuments({ bill_number: new RegExp(`^${franchiseeCode}/${finYear}/${month}-`) }, { session });
+        const count = await Bill.countDocuments({
+            bill_number: new RegExp(`^${franchiseeCode}/${finYear}/${month}-`),
+            franchise_id
+        }, { session });
+
         const invoiceNum = (count + 1).toString().padStart(4, '0');
         const bill_number = `${franchiseeCode}/${finYear}/${month}-${invoiceNum}`;
 
@@ -362,36 +736,39 @@ app.post('/api/bills', async (req, res) => {
             customer_id: customer ? customer._id : null,
             customer_phone,
             customer_name,
-            total_amount,
+            total_amount: totalAmount,
             total_items,
             notes,
             bill_date: now.toDate(),
-            service_charges: service_charges || 0 ,
+            service_charges: serviceCharge,
+            franchise_id
         };
 
-        const createdBillArr = await Bill.create([billData], { session });
-        const createdBill = createdBillArr[0];
+        const [createdBill] = await Bill.create([billData], { session });
 
         for (const item of items) {
             const productId = item.id || item.product_id;
+
+            // Verify franchise access to product & stock
+            const stock = await Stock.findOne({ product_id: productId, franchise_id }).session(session);
+            if (!stock || stock.quantity < item.quantity) {
+                throw new Error(`Not enough stock for ${item.name}. Available: ${stock ? stock.quantity : 0}`);
+            }
+
             await BillItem.create([{
                 bill_id: createdBill._id,
                 product_id: productId,
                 product_name: item.name,
                 quantity: item.quantity,
                 mrp: item.mrp,
-                discount: discount || 0,
-                service_charges : service_charges || 0,
-                total: totalAmount || item.price || item.total,
+                discount: item.discount || 0,
+                service_charges: serviceCharge,
+                total: item.total,
+                franchise_id
             }], { session });
 
-            const stock = await Stock.findOne({ product_id: productId }).session(session);
-            if (!stock || stock.quantity < item.quantity) {
-                throw new Error(`Not enough stock for ${item.name}. Available: ${stock ? stock.quantity : 0}`);
-            }
-
             await Stock.updateOne(
-                { product_id: productId },
+                { product_id: productId, franchise_id },
                 { $inc: { quantity: -item.quantity } },
                 { session }
             );
@@ -402,7 +779,8 @@ app.post('/api/bills', async (req, res) => {
                 quantity: -item.quantity,
                 reference_id: createdBill._id,
                 reference_type: 'Bill',
-                notes: `Sale via Bill #${bill_number}`
+                notes: `Sale via Bill #${bill_number}`,
+                franchise_id
             }], { session });
         }
 
@@ -418,16 +796,20 @@ app.post('/api/bills', async (req, res) => {
     }
 });
 
-
-
-
-// PDF Generation (assuming data structure is similar)
-app.get('/api/bills/:id/pdf', async (req, res) => {
+app.get('/api/bills/:id/pdf', authenticateToken, async (req, res) => {
     try {
         const bill = await Bill.findById(req.params.id);
-        if(!bill) return res.status(404).json({ error: 'Bill not found' });
 
-        const items = await BillItem.find({bill_id: bill._id});
+        if (!bill) {
+            return res.status(404).json({ error: 'Bill not found' });
+        }
+
+        // Access control: franchise or admin
+        if (req.user.role !== 'admin' && bill.franchise_id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const items = await BillItem.find({ bill_id: bill._id });
 
         const doc = new PDFDocument({ margin: 50 });
         const filename = `bill-${bill.bill_number.replace(/\//g, '-')}.pdf`;
@@ -438,9 +820,9 @@ app.get('/api/bills/:id/pdf', async (req, res) => {
 
         // PDF content
         doc.fontSize(20).text('INVOICE', { align: 'center' });
-        doc.fontSize(14).text('Dipdips Franchisee: Buddhadeb Mondal (Garg House)', { align: 'center' });
+        doc.fontSize(14).text(`Franchisee: ${req.user.username}`, { align: 'center' });
         doc.moveDown();
-        
+
         doc.fontSize(10).text(`Invoice Number: ${bill.bill_number}`);
         doc.text(`Date: ${moment(bill.bill_date).format('DD/MM/YYYY HH:mm')}`);
         doc.text(`Customer: ${bill.customer_name || 'Walk-in Customer'}`);
@@ -454,39 +836,41 @@ app.get('/api/bills/:id/pdf', async (req, res) => {
         doc.text('Item', 50, tableTop);
         doc.text('Qty', 250, tableTop);
         doc.text('MRP', 300, tableTop);
-        doc.text('Total', 420, tableTop, {align: 'right'});
+        doc.text('Total', 420, tableTop, { align: 'right' });
         doc.font('Helvetica');
         doc.moveDown();
 
         items.forEach(item => {
             const y = doc.y;
             doc.text(item.product_name, 50, y, { width: 180 });
-            doc.text(item.quantity.toString(), 250, y, {width: 40, align: 'center'});
-            doc.text(`₹${item.mrp.toFixed(2)}`, 300, y, {width: 60, align: 'right'});
-            doc.text(`₹${item.total.toFixed(2)}`, 420, y, {align: 'right'});
+            doc.text(item.quantity.toString(), 250, y, { width: 40, align: 'center' });
+            doc.text(`₹${item.mrp.toFixed(2)}`, 300, y, { width: 60, align: 'right' });
+            doc.text(`₹${item.total.toFixed(2)}`, 420, y, { align: 'right' });
             doc.moveDown();
         });
 
         doc.moveDown();
         doc.fontSize(12).text(`Total Amount: ₹${bill.total_amount.toFixed(2)}`, { align: 'right' });
-        
+
         if (bill.notes) {
             doc.moveDown();
             doc.fontSize(10).text(`Notes: ${bill.notes}`);
         }
-        
+
         doc.end();
 
-    } catch(err) {
+    } catch (err) {
+        console.error('PDF generation error:', err.message);
         res.status(500).json({ error: 'Failed to generate PDF' });
     }
 });
 
-// Reports API
-app.get('/api/reports/sales', async (req, res) => {
+app.get('/api/reports/sales', authenticateToken, async (req, res) => {
     const { start_date, end_date } = req.query;
+
     try {
         const matchStage = { status: 'completed' };
+
         if (start_date && end_date) {
             matchStage.bill_date = {
                 $gte: new Date(start_date),
@@ -494,18 +878,25 @@ app.get('/api/reports/sales', async (req, res) => {
             };
         }
 
+        // Add franchise filter for non-admins
+        if (req.user.role !== 'admin') {
+            matchStage.franchise_id = req.user._id;
+        }
+
         const sales = await Bill.aggregate([
             { $match: matchStage },
             {
                 $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$bill_date" } },
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$bill_date" }
+                    },
                     total_bills: { $sum: 1 },
                     total_sales: { $sum: "$total_amount" },
                     total_items_sold: { $sum: "$total_items" }
                 }
             },
             { $sort: { _id: -1 } },
-            { 
+            {
                 $project: {
                     _id: 0,
                     date: "$_id",
@@ -515,59 +906,85 @@ app.get('/api/reports/sales', async (req, res) => {
                 }
             }
         ]);
+
         res.json(sales);
-    } catch(err) {
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-app.get('/api/reports/stock', async (req, res) => {
-    try {
-        const stockReport = await Stock.aggregate([
-            {
-                $lookup: {
-                    from: 'products',
-                    localField: 'product_id',
-                    foreignField: '_id',
-                    as: 'product'
-                }
-            },
-            { $unwind: '$product' },
-            {
-                $project: {
-                    _id: 0,
-                    name: '$product.name',
-                    brand: '$product.brand',
-                    quantity: '$quantity',
-                    min_quantity: '$min_quantity',
-                    status: {
-                        $cond: { if: { $lte: ['$quantity', '$min_quantity'] }, then: 'Low Stock', else: 'In Stock' }
-                    }
-                }
-            },
-            { $sort: { quantity: 1 } }
-        ]);
-        res.json(stockReport);
     } catch (err) {
+        console.error('❌ Sales report error:', err.message);
         res.status(500).json({ error: 'Database error' });
     }
 });
 
+
+app.get('/api/reports/sales', authenticateToken, async (req, res) => {
+    try {
+        const franchise_id = req.user.role === 'admin' ? req.query.franchise_id : req.user._id;
+
+        if (!franchise_id) {
+            return res.status(400).json({ error: 'Franchise ID is required' });
+        }
+
+        // Fetch products for pending stock value
+        const products = await Product.find({ franchise_id });
+
+        let pendingStockValue = 0;
+        let totalStockQty = 0;
+
+        products.forEach(p => {
+            const qty = p.stock_quantity || 0;
+            const cost = p.purchased_price || 0;
+            pendingStockValue += qty * cost;
+            totalStockQty += qty;
+        });
+
+        // Fetch all bills
+        const bills = await Bill.find({ franchise_id });
+
+        const totalSalesTillDate = bills.reduce((sum, bill) => {
+            return sum + (bill.total_amount || 0);
+        }, 0);
+
+        // Sales in current month
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const billsThisMonth = bills.filter(b => new Date(b.date) >= startOfMonth);
+        const totalSalesThisMonth = billsThisMonth.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+
+        res.json({
+            pendingStockValue,
+            totalStockQty,
+            totalSalesTillDate,
+            totalSalesThisMonth
+        });
+
+    } catch (err) {
+        console.error('❌ Error generating sales report:', err.message);
+        res.status(500).json({ error: 'Failed to generate report' });
+    }
+});
 
 // Search API
-app.get('/api/search/products', async (req, res) => {
+app.get('/api/search/products', authenticateToken, async (req, res) => {
     const { q } = req.query;
     if (!q) return res.json([]);
 
     try {
-        const products = await Product.find({
+        const query = {
             $or: [
                 { name: { $regex: q, $options: 'i' } },
                 { brand: { $regex: q, $options: 'i' } }
             ]
-        }).limit(10);
+        };
+
+        if (req.user.role !== 'admin') {
+            query.franchise_id = req.user._id;
+        }
+
+        const products = await Product.find(query).limit(10);
         res.json(products);
-    } catch(err) {
+    } catch (err) {
+        console.error('Product search error:', err.message);
         res.status(500).json({ error: 'Database error' });
     }
 });

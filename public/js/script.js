@@ -1,3 +1,56 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('franchisee_token');
+    const role = localStorage.getItem('franchisee_role');
+    const isLoggedIn = !!token && role === 'franchisee'; // Only allow franchisee
+
+    const mobileAuth = document.getElementById('mobileAuthButtons');
+    const mobileUser = document.getElementById('mobileUserButtons');
+    const desktopAuth = document.getElementById('desktopAuthButtons');
+    const desktopUser = document.getElementById('desktopUserButtons');
+    
+    const startBillingBtn = document.getElementById('startBillingBtn');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+
+    if (token && role !== 'franchisee') {
+        // If not franchisee, redirect to admin or login page
+        window.location.href = '/admin.html';
+        return;
+    }
+
+    if (isLoggedIn) {
+        if (mobileAuth) mobileAuth.style.display = 'none';
+        if (mobileUser) mobileUser.style.display = 'block';
+        if (desktopAuth) desktopAuth.style.display = 'none';
+        if (desktopUser) desktopUser.style.display = 'flex';
+    } else {
+        if (mobileAuth) mobileAuth.style.display = 'block';
+        if (mobileUser) mobileUser.style.display = 'none';
+        if (desktopAuth) desktopAuth.style.display = 'block';
+        if (desktopUser) desktopUser.style.display = 'none';
+    }
+
+    // Hide buttons if not logged in
+    if (!isLoggedIn) {
+        if (startBillingBtn) startBillingBtn.style.display = 'none';
+        if (getStartedBtn) getStartedBtn.style.display = 'none';
+    }
+
+    const franchiseNameEl = document.getElementById('franchiseName');
+const storedName = localStorage.getItem('franchisee_name');
+if (franchiseNameEl && storedName) {
+    franchiseNameEl.textContent = storedName;
+}
+
+});
+
+
+
+function handleLogout() {
+    localStorage.removeItem('franchisee_token');
+    localStorage.removeItem('franchisee_role');
+    window.location.reload(); // reload to reflect logout state
+}
+
 // Mobile Menu Functions
 function toggleMobileMenu() {
     const overlay = document.getElementById('mobileMenuOverlay');
@@ -6,12 +59,6 @@ function toggleMobileMenu() {
     if (overlay.classList.contains('active')) {
         closeMobileMenu();
     } else {
-        overlay.style.display = 'flex';
-        overlay.style.visibility = 'visible';
-        overlay.style.opacity = '1';
-        overlay.style.zIndex = '1000';
-        // Force a reflow to ensure the display change takes effect
-        overlay.offsetHeight;
         overlay.classList.add('active');
         hamburger.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -23,11 +70,7 @@ function closeMobileMenu() {
     const hamburger = document.querySelector('.hamburger-menu');
     
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -64,92 +107,174 @@ let customerDatabase = [];
 API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000/api'
   : 'https://billingsoftware-4mw3.onrender.com/api';
-// API Functions
+
 async function fetchProducts() {
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
+        const token = localStorage.getItem('franchisee_token');
+
+        if (!token) {
+            showMessage('Please log in first to fetch products.', 'error');
+            return [];
+        }
+
+        const response = await fetch(`${API_BASE_URL}/products`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch products');
+        }
+
         const products = await response.json();
         productDatabase = [...products];
         return products;
+
     } catch (error) {
         console.error('Error fetching products:', error);
-        showMessage('Error loading products', 'error');
+        showMessage(`Error loading products: ${error.message}`, 'error');
         return [];
     }
 }
 
 async function fetchStock() {
     try {
-        const response = await fetch(`${API_BASE_URL}/stock`);
-        let stock = await response.json();
+        const token = localStorage.getItem('franchisee_token');
+
+        if (!token) {
+            showMessage('Please log in to load stock.', 'error');
+            return [];
+        }
+
+        const response = await fetch(`${API_BASE_URL}/stock`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch stock');
+        }
+
+        const stock = await response.json();
         stockDatabase = [...stock];
         return stock;
+
     } catch (error) {
         console.error('Error fetching stock:', error);
-        showMessage('Error loading stock', 'error');
+        showMessage(`Error loading stock: ${error.message}`, 'error');
         return [];
     }
 }
 
 async function fetchCustomers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/customers`);
+        const token = localStorage.getItem('franchisee_token');
+
+        if (!token) {
+            showMessage('Please log in to load customers.', 'error');
+            return [];
+        }
+
+        const response = await fetch(`${API_BASE_URL}/customers`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch customers');
+        }
+
         const customers = await response.json();
         customerDatabase = [...customers];
         return customers;
     } catch (error) {
         console.error('Error fetching customers:', error);
-        showMessage('Error loading customers', 'error');
+        showMessage(`Error loading customers: ${error.message}`, 'error');
         return [];
     }
 }
 
 async function saveCustomer(customerData) {
     try {
+        const token = localStorage.getItem('franchisee_token');
+        if (!token) {
+            console.error('No token found');
+            showMessage('User not authenticated', 'error');
+            return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/customers`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(customerData)
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to save customer');
+        }
+
         const result = await response.json();
-        
-        // Refresh customer database after saving
-        await fetchCustomers();
-        
+        showMessage('Customer saved successfully', 'success');
         return result;
+
     } catch (error) {
-        console.error('Error saving customer:', error);
-        throw error;
+        console.error('Error saving customer:', error.message);
+        showMessage(`Error saving customer: ${error.message}`, 'error');
     }
 }
 
 async function createBill(billData) {
     try {
+        const token = localStorage.getItem('franchisee_token');
+        if (!token) {
+            console.error('No token found in localStorage');
+            showMessage('You must be logged in to create a bill', 'error');
+            return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/bills`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(billData)
         });
-        return await response.json();
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create bill');
+        }
+
+        const result = await response.json();
+        showMessage('Bill created successfully', 'success');
+        return result;
+
     } catch (error) {
-        console.error('Error creating bill:', error);
-        throw error;
+        console.error('Error creating bill:', error.message);
+        showMessage(`Error creating bill: ${error.message}`, 'error');
     }
 }
 
+
 async function addStockItemAPI(stockData) {
     try {
-        // const token = localStorage.getItem('token'); 
+        const token = localStorage.getItem('franchisee_token'); 
         const response = await fetch(`${API_BASE_URL}/stock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(stockData)
         });
@@ -173,11 +298,11 @@ async function addStockItem() {
     }
     
     // Check if user is authenticated
-    // const token = localStorage.getItem('token');
-    // if (!token) {
-    //     showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
-    //     return;
-    // }
+    const token = localStorage.getItem('franchisee_token');
+    if (!token) {
+        showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
+        return;
+    }
     
     try {
         // First add the product
@@ -185,7 +310,7 @@ async function addStockItem() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: itemName,
@@ -459,11 +584,7 @@ function hideAllSections() {
     // Ensure mobile menu overlay is completely hidden
     const overlay = document.getElementById('mobileMenuOverlay');
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     
     // Reset hamburger menu
@@ -504,6 +625,91 @@ function showCustomerData() {
     document.body.style.minHeight = '100vh';
     window.scrollTo(0, 0);
 }
+
+function displaySalesReportTable(stockData) {
+    const tableBody = document.getElementById('salesReportTableBody');
+    tableBody.innerHTML = '';
+
+    stockData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.product_id?.name || 'Unknown'}</td>
+            <td>${item.quantity}</td>
+            <td>${item.vendor || '-'}</td>
+            <td>${new Date(item.date).toLocaleDateString()}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+
+async function fetchAndDisplaySalesReport() {
+    try {
+        const token = localStorage.getItem('franchisee_token');
+        if (!token) {
+            showMessage('⚠️ Please log in to view reports', 'error');
+            return;
+        }
+
+        // Fetch all stock with auth
+        const stockRes = await fetch(`${API_BASE_URL}/stock`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const stock = await stockRes.json();
+
+        // Fetch all bills with auth
+        const billRes = await fetch(`${API_BASE_URL}/bills`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const bills = await billRes.json();
+
+        // 1. Pending Stock Value: sum of (purchased_price * quantity) for all stock
+        let pendingStockValue = 0;
+        let totalStockQty = 0;
+        stock.forEach(item => {
+            const qty = item.quantity || 0;
+            const price = item.purchased_price || 0;
+            pendingStockValue += price * qty;
+            totalStockQty += qty;
+        });
+
+        // 2. Total Sales Till Date: sum of all bill total_amount
+        let totalSalesTillDate = 0;
+        bills.forEach(bill => {
+            totalSalesTillDate += bill.total_amount || 0;
+        });
+
+        // 3. Total Sales This Month
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        let totalSalesThisMonth = 0;
+        bills.forEach(bill => {
+            const billDate = bill.bill_date ? new Date(bill.bill_date) : null;
+            if (billDate && billDate.getMonth() === thisMonth && billDate.getFullYear() === thisYear) {
+                totalSalesThisMonth += bill.total_amount || 0;
+            }
+        });
+
+        // Populate table
+        const tbody = document.getElementById('salesReportTableBody');
+        tbody.innerHTML = '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td data-label="Pending Stock Value (₹)">₹${pendingStockValue.toFixed(2)}</td>
+            <td data-label="Total Stock Qty">${totalStockQty}</td>
+            <td data-label="Total Sales Till Date (₹)">₹${totalSalesTillDate.toFixed(2)}</td>
+            <td data-label="Total Sales This Month (₹)">₹${totalSalesThisMonth.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+
+    } catch (err) {
+        console.error('Error fetching sales report:', err.message);
+        showMessage('Error loading sales report', 'error');
+    }
+}
+
+
 
 function showSalesReport() {
     hideAllSections();
@@ -983,11 +1189,7 @@ function handleMobileStartBilling() {
     
     // Immediately hide overlay and reset state
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -1008,11 +1210,7 @@ function handleMobileCustomerData() {
     
     // Immediately hide overlay and reset state
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -1033,11 +1231,7 @@ function handleMobileSalesReport() {
     
     // Immediately hide overlay and reset state
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -1058,11 +1252,7 @@ function handleMobileStock() {
     
     // Immediately hide overlay and reset state
     if (overlay) {
-        overlay.style.display = 'none';
         overlay.classList.remove('active');
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
     }
     if (hamburger) {
         hamburger.classList.remove('active');
@@ -1107,12 +1297,12 @@ async function updateStockTable() {
 async function removeStockItem(id) {
     if (confirm('Are you sure you want to remove this item?')) {
         try {
-            // const token = localStorage.getItem('token');
+            const token = localStorage.getItem('franchisee_token');
             const response = await fetch(`${API_BASE_URL}/stock/${id}`, {
                 method: 'DELETE',
-                // headers: {
-                //     'Authorization': `Bearer ${token}`
-                // }
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             if (response.ok) {
                 showMessage('Item removed successfully', 'success');
@@ -1172,100 +1362,102 @@ function clearStockForm() {
     });
 }
 
-// --- Fetch and Populate Customer Data ---
+function displayCustomerTable(customers) {
+    const tableBody = document.getElementById('customerDataTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    customers.forEach(customer => {
+        const row = document.createElement('tr');
+        const dateStr = customer.lastPurchaseDate
+            ? new Date(customer.lastPurchaseDate).toLocaleDateString()
+            : '-';
+
+        row.innerHTML = `
+            <td>${customer.name || '-'}</td>
+            <td>${customer.phone || '-'}</td>
+            <td>${dateStr}</td>
+            <td>${customer.totalBills || 0}</td>
+            <td>₹${customer.totalValue || 0}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+
+
 async function fetchAndDisplayCustomerData() {
     try {
-        // Fetch all customers
-        const customers = await fetch(`${API_BASE_URL}/customers`).then(r => r.json());
-        // Fetch all bills to get last purchase date, total bills, and total value
-        const bills = await fetch(`${API_BASE_URL}/bills`).then(r => r.json());
+        const token = localStorage.getItem('franchisee_token');
+        if (!token) {
+            showMessage('⚠️ Please log in to view customer data', 'error');
+            return;
+        }
+
+        // Fetch customers with token
+        const customersRes = await fetch(`${API_BASE_URL}/customers`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const customers = await customersRes.json();
+
+        // Fetch bills with token
+        const billsRes = await fetch(`${API_BASE_URL}/bills`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const bills = await billsRes.json();
+
         // Map phone to last purchase date, total bills, and total value
         const customerStats = {};
         bills.forEach(bill => {
-            if (bill.customer_phone) {
-                const phone = bill.customer_phone;
-                const billDate = bill.bill_date || bill.created_at;
-                if (!customerStats[phone]) {
-                    customerStats[phone] = {
-                        lastPurchase: billDate,
-                        totalBills: 1,
-                        totalValue: bill.total_amount || 0
-                    };
-                } else {
-                    // Update last purchase date if newer
-                    if (new Date(billDate) > new Date(customerStats[phone].lastPurchase)) {
-                        customerStats[phone].lastPurchase = billDate;
-                    }
-                    customerStats[phone].totalBills += 1;
-                    customerStats[phone].totalValue += bill.total_amount || 0;
+            const phone = bill.customer_phone;
+            const billDate = bill.bill_date || bill.created_at;
+            if (!phone) return;
+
+            if (!customerStats[phone]) {
+                customerStats[phone] = {
+                    lastPurchase: billDate,
+                    totalBills: 1,
+                    totalValue: bill.total_amount || 0
+                };
+            } else {
+                if (new Date(billDate) > new Date(customerStats[phone].lastPurchase)) {
+                    customerStats[phone].lastPurchase = billDate;
                 }
+                customerStats[phone].totalBills += 1;
+                customerStats[phone].totalValue += bill.total_amount || 0;
             }
         });
+
         // Populate table
         const tbody = document.getElementById('customerDataTableBody');
+        if (!tbody) {
+            console.error('customerDataTableBody element not found');
+            return;
+        }
+
         tbody.innerHTML = '';
         customers.forEach(cust => {
-            const stats = customerStats[cust.phone] || { lastPurchase: null, totalBills: 0, totalValue: 0 };
+            const stats = customerStats[cust.phone] || {
+                lastPurchase: null,
+                totalBills: 0,
+                totalValue: 0
+            };
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td data-label="Name">${cust.name || ''}</td>
                 <td data-label="WhatsApp Number">${cust.phone || ''}</td>
-                <td data-label="Last Purchase Date">${stats.lastPurchase ? new Date(stats.lastPurchase).toLocaleDateString() : '-'}</td>
+                <td data-label="Last Purchase Date">${stats.lastPurchase ? new Date(stats.lastPurchase).toLocaleDateString('en-GB') : '-'}</td>
                 <td data-label="Total Bills">${stats.totalBills}</td>
                 <td data-label="Total Value So Far">₹${stats.totalValue.toFixed(2)}</td>
             `;
             tbody.appendChild(tr);
         });
-    } catch (err) {
-        showMessage('Error loading customer data', 'error');
-    }
-}
 
-// --- Fetch and Populate Sales Report ---
-async function fetchAndDisplaySalesReport() {
-    try {
-        // Fetch all stock
-        const stock = await fetch(`${API_BASE_URL}/stock`).then(r => r.json());
-        // Fetch all bills
-        const bills = await fetch(`${API_BASE_URL}/bills`).then(r => r.json());
-        // 1. Pending Stock Value: sum of (purchased_price * quantity) for all stock
-        let pendingStockValue = 0;
-        let totalStockQty = 0;
-        stock.forEach(item => {
-            const qty = item.quantity || 0;
-            const price = item.purchased_price || 0;
-            pendingStockValue += price * qty;
-            totalStockQty += qty;
-        });
-        // 2. Total Sales Till Date: sum of all bill total_amount
-        let totalSalesTillDate = 0;
-        bills.forEach(bill => {
-            totalSalesTillDate += bill.total_amount || 0;
-        });
-        // 3. Total Sales This Month: sum of bill total_amount for bills in current month
-        const now = new Date();
-        const thisMonth = now.getMonth();
-        const thisYear = now.getFullYear();
-        let totalSalesThisMonth = 0;
-        bills.forEach(bill => {
-            const billDate = bill.bill_date ? new Date(bill.bill_date) : null;
-            if (billDate && billDate.getMonth() === thisMonth && billDate.getFullYear() === thisYear) {
-                totalSalesThisMonth += bill.total_amount || 0;
-            }
-        });
-        // Populate table (single row)
-        const tbody = document.getElementById('salesReportTableBody');
-        tbody.innerHTML = '';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td data-label="Pending Stock Value (₹)">₹${pendingStockValue.toFixed(2)}</td>
-            <td data-label="Total Stock Qty">${totalStockQty}</td>
-            <td data-label="Total Sales Till Date (₹)">₹${totalSalesTillDate.toFixed(2)}</td>
-            <td data-label="Total Sales This Month (₹)">₹${totalSalesThisMonth.toFixed(2)}</td>
-        `;
-        tbody.appendChild(tr);
     } catch (err) {
-        showMessage('Error loading sales report', 'error');
+        console.error('Error loading customer data:', err.message);
+        showMessage('Error loading customer data', 'error');
     }
 }
 
@@ -1283,11 +1475,11 @@ async function addStockItem() {
     }
     
     // Check if user is authenticated
-    // const token = localStorage.getItem('token');
-    // if (!token) {
-    //     showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
-    //     return;
-    // }
+    const token = localStorage.getItem('franchisee_token');
+    if (!token) {
+        showMessage('Please log in to add stock items. Go to Admin panel first.', 'error');
+        return;
+    }
     
     try {
         // First add the product
@@ -1295,7 +1487,7 @@ async function addStockItem() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: itemName,
@@ -1420,6 +1612,7 @@ async function initializeApp() {
     }
 }
 
+// --- Autocomplete Dropdown for Stock Item Name (Existing Stock) ---
 async function addStockItemWithConsumables() {
     // Product fields
     const itemName = document.getElementById('stockItemName').value.trim();
@@ -1430,7 +1623,8 @@ async function addStockItemWithConsumables() {
     const vendor = document.getElementById('stockVendorInput').value;
     const invoice = document.getElementById('stockInvoice').value.trim();
     const date = document.getElementById('stockDate').value;
-    // Consumables
+
+    // Consumables (optional for stock record)
     const consumables = {
         glass_150ml: parseInt(document.getElementById('consumableGlass').value) || 0,
         spoon: parseInt(document.getElementById('consumableSpoon').value) || 0,
@@ -1439,47 +1633,66 @@ async function addStockItemWithConsumables() {
         foil_small: parseInt(document.getElementById('consumableFoilSmall').value) || 0,
         foil_big: parseInt(document.getElementById('consumableFoilBig').value) || 0
     };
+
     if (!itemName || !mrp) {
         showMessage('Please fill all required fields', 'error');
         return;
     }
+
     try {
-        // Add product with consumables
+        const token = localStorage.getItem('franchisee_token');
+        const userRole = localStorage.getItem('franchisee_role'); // You must store this at login
+        const selectedFranchiseId = localStorage.getItem('selectedFranchiseId'); // Only for admin (optional)
+
+        // Construct product payload matching backend expectations
+        const productPayload = {
+            name: itemName,
+            brand: brand,
+            mrp: mrp,
+            purchased_price: purchasedPrice,
+            selling_price: mrp, // Use MRP as default selling price
+            category: 'Uncategorized',
+            unit: 'pcs',
+            hsn: '0000',
+            gst_rate: 0,
+            description: ''
+        };
+
+        if (userRole === 'admin' && selectedFranchiseId) {
+            productPayload.franchise_id = selectedFranchiseId;
+        }
+
         const productResponse = await fetch(`${API_BASE_URL}/products`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-                name: itemName,
-                brand: brand,
-                mrp: mrp,
-                purchased_price: purchasedPrice,
-                vendor: vendor,
-                invoice: invoice,
-                date: date,
-                consumables: consumables
-            })
+            body: JSON.stringify(productPayload)
         });
+
         if (!productResponse.ok) {
             const errorData = await productResponse.json();
             throw new Error(errorData.error || 'Failed to add product');
         }
+
         const productResult = await productResponse.json();
-        if (productResult.id) {
-            // Then update stock
+        if (productResult.product && productResult.product._id) {
+            // Then update stock with consumables
             await addStockItemAPI({
-                product_id: productResult.id,
+                product_id: productResult.product._id,
                 quantity: quantity,
                 vendor: vendor,
                 invoice: invoice,
-                date: date
+                date: date,
+                consumables: consumables
             });
+
             showMessage('Stock item added successfully', 'success');
             clearStockForm();
             await updateStockTable();
-            await fetchProducts(); // Refresh product database
-            // Reset stepper
+            await fetchProducts();
+
             document.getElementById('addStockFormStep1').style.display = 'block';
             document.getElementById('addStockFormStep2').style.display = 'none';
         }
@@ -1489,7 +1702,9 @@ async function addStockItemWithConsumables() {
     }
 }
 
-// --- Autocomplete Dropdown for Stock Item Name (Existing Stock) ---
+
+
+
 function setupExistingStockItemDropdown() {
     const input = document.getElementById('existingStockItemNameInput');
     const dropdown = document.getElementById('existingStockItemDropdown');
@@ -1624,3 +1839,39 @@ showStock = function() {
     originalShowStock.apply(this, arguments);
     setTimeout(setupStockDropdowns, 200); // Wait for DOM and productDatabase
 };
+
+
+function toggleMobileMenu() {
+  const overlay = document.getElementById("mobileMenuOverlay");
+  const hamburger = document.querySelector(".hamburger-menu");
+  overlay.classList.toggle("active");
+  hamburger.classList.toggle("active");
+}
+
+function closeMobileMenu() {
+  document.getElementById("mobileMenuOverlay").classList.remove("active");
+  document.querySelector(".hamburger-menu").classList.remove("active");
+}
+
+// Call this after login/logout or on page load
+function updateNavBarUI(isLoggedIn) {
+  document.getElementById("desktopAuthButtons").style.display = isLoggedIn ? "none" : "flex";
+  document.getElementById("desktopUserButtons").style.display = isLoggedIn ? "flex" : "none";
+  document.getElementById("mobileAuthButtons").style.display = isLoggedIn ? "none" : "block";
+  document.getElementById("mobileUserButtons").style.display = isLoggedIn ? "block" : "none";
+}
+
+// Example: check auth state from localStorage or token
+document.addEventListener("DOMContentLoaded", () => {
+  const token = localStorage.getItem("franchisee_token"); // or your auth check logic
+  updateNavBarUI(!!token);
+});
+
+function handleLogout() {
+  localStorage.removeItem("franchisee_token");
+  updateNavBarUI(false);
+  // Optionally redirect to home or login
+  window.location.href = "/";
+}
+
+

@@ -2,8 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Smart Billing Registration</title>
-    <link rel="stylesheet" href="/style.css" />
+    <title>Smart Billing Authentication</title>
     <style>
       * {
         margin: 0;
@@ -13,7 +12,7 @@
 
       body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background:linear-gradient(45deg, #7a6ff0, #d1c4e9);
+        background: linear-gradient(45deg, #7a6ff0, #d1c4e9);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -114,21 +113,10 @@
         font-size: 0.9rem;
       }
 
-      /* Responsive design */
       @media (max-width: 768px) {
         .auth-container {
           width: 90%;
           padding: 30px;
-        }
-
-        .auth-header h2 {
-          font-size: 1.5rem;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-          font-size: 0.95rem;
         }
       }
 
@@ -153,6 +141,7 @@
     </style>
   </head>
   <body>
+    <!-- Login Page -->
     <div id="loginPage" class="auth-page" style="display: block">
       <div class="auth-container">
         <div class="auth-header">
@@ -160,8 +149,8 @@
           <p>Log in to your account</p>
         </div>
         <div class="form-group">
-          <label for="loginUsername">Username</label>
-          <input type="text" id="loginUsername" placeholder="Enter your username" />
+          <label for="loginFranchise">Franchise Name</label>
+          <input type="text" id="loginFranchise" placeholder="Enter your franchise name" />
         </div>
         <div class="form-group">
           <label for="loginPassword">Password</label>
@@ -173,6 +162,7 @@
       </div>
     </div>
 
+    <!-- Registration Page -->
     <div id="registrationPage" class="auth-page">
       <div class="auth-container">
         <div class="auth-header">
@@ -180,12 +170,16 @@
           <p>Create your new account</p>
         </div>
         <div class="form-group">
-          <label for="regUsername">Username</label>
-          <input type="text" id="regUsername" placeholder="Choose a username" />
+          <label for="regFranchise">Franchise Name</label>
+          <input type="text" id="regFranchise" placeholder="Enter franchise name" />
         </div>
         <div class="form-group">
-          <label for="regEmail">Email</label>
-          <input type="email" id="regEmail" placeholder="Enter your email" />
+          <label for="regLocation">Location</label>
+          <input type="text" id="regLocation" placeholder="Enter location" />
+        </div>
+        <div class="form-group">
+          <label for="regPhone">Phone Number</label>
+          <input type="text" id="regPhone" placeholder="Enter phone number" />
         </div>
         <div class="form-group">
           <label for="regPassword">Password</label>
@@ -201,6 +195,118 @@
       </div>
     </div>
 
-    <script src="/script.js"></script>
+    <script>
+  function handleRegistration() {
+    const franchise = document.getElementById('regFranchise').value;
+    const location = document.getElementById('regLocation').value;
+    const phone = document.getElementById('regPhone').value;
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+    const msg = document.getElementById('registrationMessages');
+    msg.style.color = 'red';
+
+    if (!franchise || !location || !phone || !password || !confirmPassword) {
+      msg.textContent = 'All fields are required.';
+    } else if (password !== confirmPassword) {
+      msg.textContent = 'Passwords do not match.';
+    } else {
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          franchise_name: franchise,
+          location,
+          phone_number: phone,
+          password
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            msg.textContent = data.error;
+          } else {
+            msg.style.color = 'green';
+            msg.textContent = 'Registration submitted. Awaiting admin approval.';
+          }
+        })
+        .catch(() => {
+          msg.textContent = 'Something went wrong.';
+        });
+    }
+  }
+
+ function handleLogin() {
+  const franchise = document.getElementById('loginFranchise').value;
+  const password = document.getElementById('loginPassword').value;
+  const loginMsg = document.getElementById('loginMessages');
+
+  if (!franchise || !password) {
+    loginMsg.style.color = 'red';
+    loginMsg.textContent = 'Please fill all fields.';
+    return;
+  }
+
+  loginMsg.style.color = 'black';
+  loginMsg.textContent = 'Attempting login...';
+
+  fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      franchise_name: franchise,
+      password: password
+    })
+  })
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(({ status, body }) => {
+      if (status !== 200) {
+        loginMsg.style.color = 'red';
+        loginMsg.textContent = body.error || 'Login failed.';
+        return;
+      }
+
+      if (body.pending_approval) {
+        loginMsg.style.color = 'orange';
+        loginMsg.textContent = 'Your registration is pending approval.';
+        return;
+      }
+
+      // ✅ Save token to localStorage
+      localStorage.setItem('franchisee_token', body.token);
+      localStorage.setItem('franchisee_role', 'franchisee');
+      localStorage.setItem('franchisee_name', body.franchisee.franchise_name);
+
+
+      loginMsg.style.color = 'green';
+      loginMsg.textContent = 'Login successful! Redirecting...';
+
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 1000);
+    })
+    .catch((err) => {
+      console.error('Login error:', err);
+      loginMsg.style.color = 'red';
+      loginMsg.textContent = 'Something went wrong. Please try again.';
+    });
+}
+</script>
+
+
+<script>
+    function showRegistrationPage() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('registrationPage').style.display = 'block';
+    }
+
+    function showLoginPage() {
+      document.getElementById('registrationPage').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'block';
+    }
+  </script>
+
   </body>
 </html>

@@ -12,7 +12,13 @@ const productSchema = new mongoose.Schema({
     },
     purchased_price: Number,
     description: String,
-    category: String
+    category: String,
+
+    franchise_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
 }, {
     timestamps: { 
         createdAt: 'created_at', 
@@ -20,4 +26,4 @@ const productSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Product', productSchema); 
+module.exports = mongoose.model('Product', productSchema);
