@@ -1874,4 +1874,316 @@ function handleLogout() {
   window.location.href = "/";
 }
 
+// Profile Section Functions
+function showProfile() {
+    hideAllSections();
+    document.getElementById('profileSection').style.display = 'block';
+    initializeSignatureCanvas();
+    setupFileUploads();
+}
+
+function handleMobileProfile() {
+    closeMobileMenu();
+    showProfile();
+}
+
+// Signature Canvas Functionality
+let isDrawing = false;
+let canvas, ctx;
+
+function initializeSignatureCanvas() {
+    canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+    
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    
+    // Touch events for mobile
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // Touch events
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchend', stopDrawing);
+}
+
+function handleTouch(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    if (e.type === 'touchstart') {
+        startDrawing({ clientX: x, clientY: y });
+    } else if (e.type === 'touchmove') {
+        draw({ clientX: x, clientY: y });
+    }
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    const { x, y } = getXY(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    const { x, y } = getXY(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+}
+
+function getXY(event) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
+    return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+    };
+}
+
+
+function stopDrawing() {
+    isDrawing = false;
+}
+
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('signatureData').value = '';
+}
+
+function saveSignature() {
+    const signatureData = canvas.toDataURL();
+    document.getElementById('signatureData').value = signatureData;
+    showMessage('Signature saved successfully!', 'success');
+}
+
+// File Upload Functionality
+function setupFileUploads() {
+    setupFileUpload('profilePic', 'profilePicPreview');
+    setupFileUpload('aadharPhoto', 'aadharPhotoPreview');
+    setupFileUpload('documents', 'documentsPreview', true);
+}
+
+function setupFileUpload(inputId, previewId, multiple = false) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    
+    if (!input || !preview) return;
+    
+    input.addEventListener('change', function(e) {
+        preview.innerHTML = '';
+        const files = Array.from(e.target.files);
+        
+        files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = file.name;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${file.name}</span>
+                    <button type="button" class="remove-file" onclick="removeFile(this, '${inputId}')">×</button>
+                `;
+                preview.appendChild(fileItem);
+            }
+        });
+    });
+}
+
+function removeFile(button, inputId) {
+    const fileItem = button.parentElement;
+    fileItem.remove();
+    
+    // Clear the file input
+    const input = document.getElementById(inputId);
+    input.value = '';
+}
+
+// Dynamic Form Fields
+function addEducationEntry() {
+    const container = document.getElementById('educationContainer');
+    const entry = document.createElement('div');
+    entry.className = 'education-entry';
+    entry.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Qualification</label>
+                <input type="text" name="qualification[]" required>
+            </div>
+            <div class="form-group">
+                <label>Year of Passing</label>
+                <input type="number" name="yearOfPassing[]" min="1900" max="2030" required>
+            </div>
+            <div class="form-group">
+                <label>Name of Institution</label>
+                <input type="text" name="institution[]" required>
+            </div>
+        </div>
+        <button type="button" class="remove-entry" onclick="removeEntry(this)">×</button>
+    `;
+    container.appendChild(entry);
+}
+
+function addExperienceEntry() {
+    const container = document.getElementById('experienceContainer');
+    const entry = document.createElement('div');
+    entry.className = 'experience-entry';
+    entry.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Period</label>
+                <input type="text" name="workPeriod[]" placeholder="e.g., 2020-2022">
+            </div>
+            <div class="form-group">
+                <label>Organization</label>
+                <input type="text" name="organization[]">
+            </div>
+            <div class="form-group">
+                <label>Designation</label>
+                <input type="text" name="designation[]">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Responsibilities</label>
+            <textarea name="responsibilities[]" rows="2"></textarea>
+        </div>
+        <button type="button" class="remove-entry" onclick="removeEntry(this)">×</button>
+    `;
+    container.appendChild(entry);
+}
+
+function removeEntry(button) {
+    const entry = button.parentElement;
+    entry.remove();
+}
+
+// Form Submission
+document.addEventListener('DOMContentLoaded', function() {
+    const vendorForm = document.getElementById('vendorProfileForm');
+    if (vendorForm) {
+        vendorForm.addEventListener('submit', handleVendorFormSubmit);
+    }
+});
+
+async function handleVendorFormSubmit(e) {
+    e.preventDefault();
+    
+    // Validate signature
+    if (!document.getElementById('signatureData').value) {
+        showMessage('Please provide your digital signature', 'error');
+        return;
+    }
+    
+    // Validate privacy policy
+    if (!document.getElementById('privacyPolicy').checked) {
+        showMessage('Please agree to the privacy policy', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const form = e.target;
+    form.classList.add('loading');
+    
+    try {
+        // Collect form data
+        const formData = new FormData(form);
+        
+        // Add franchisee information
+        const token = localStorage.getItem('franchisee_token');
+        if (token) {
+            formData.append('franchisee_token', token);
+        }
+        
+        // Submit to server
+        const response = await fetch('/api/vendor-profile', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            showSuccessModal();
+            form.reset();
+            clearSignature();
+            // Clear file previews
+            document.querySelectorAll('.file-preview').forEach(preview => {
+                preview.innerHTML = '';
+            });
+        } else {
+            const error = await response.json();
+            showMessage(error.message || 'Failed to submit application', 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showMessage('Network error. Please try again.', 'error');
+    } finally {
+        form.classList.remove('loading');
+    }
+}
+
+// Modal Functions
+function showSuccessModal() {
+    const modal = document.getElementById('successModal');
+    modal.style.display = 'flex';
+}
+
+function closeSuccessModal() {
+    const modal = document.getElementById('successModal');
+    modal.style.display = 'none';
+    showHomePage();
+}
+
+function showPrivacyPolicy() {
+    // You can implement a privacy policy modal or redirect to a privacy policy page
+    alert('Privacy Policy: Your personal information will be used solely for the purpose of processing your DipDips vendor application. We will not share your information with third parties without your consent.');
+}
+
+// Update the hideAllSections function to include profile section
+function hideAllSections() {
+    document.getElementById('homePage').style.display = 'none';
+    document.getElementById('billingApp').style.display = 'none';
+    document.getElementById('customerDataSection').style.display = 'none';
+    document.getElementById('salesReportSection').style.display = 'none';
+    document.getElementById('stockSection').style.display = 'none';
+    document.getElementById('profileSection').style.display = 'none';
+}
+
+// Update the existing handleLogout function
+function handleLogout() {
+    localStorage.removeItem('franchisee_token');
+    localStorage.removeItem('franchisee_role');
+    localStorage.removeItem('franchisee_name');
+    window.location.reload();
+}
+
+function goToDashboard() {
+  window.location.href = '/index.html';  // Adjust dashboard URL
+}
+
+function logout() {
+  sessionStorage.clear();
+  localStorage.clear();
+  window.location.href = '/registration.html';  // Adjust login URL
+}
 

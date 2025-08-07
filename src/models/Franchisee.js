@@ -6,6 +6,15 @@ const franchiseeSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    full_name: {                     // Added full_name
+        type: String,
+        required: true
+    },
+    email: {                         // Added email
+        type: String,
+        required: true,
+        unique: true
+    },
     location: {
         type: String,
         required: true
@@ -17,19 +26,9 @@ const franchiseeSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    },
-    pending_approval: {
-        type: Boolean,
-        default: true
-    },
-    status: {
-  type: String,
-  enum: ['pending', 'approved', 'rejected'],
-  default: 'pending'
-}
-
+    }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Franchisee', franchiseeSchema); 
+module.exports = mongoose.model('Franchisee', franchiseeSchema);

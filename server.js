@@ -8,6 +8,8 @@ const moment = require('moment');
 const PDFDocument = require('pdfkit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const nodemailer = require('nodemailer');
 
 // Import Mongoose Models
 const Bill = require('./src/models/Bill');
@@ -18,6 +20,7 @@ const Stock = require('./src/models/Stock');
 const StockTransaction = require('./src/models/StockTransaction');
 const User = require('./src/models/User');
 const Franchisee = require('./src/models/Franchisee');
+const VendorProfile = require('./src/models/VendorProfile');
 
 // Database connection
 const connectDB = require('./src/config/database');
@@ -65,9 +68,39 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        // Allow images and documents
+        if (file.mimetype.startsWith('image/') || 
+            file.mimetype === 'application/pdf' ||
+            file.mimetype === 'application/msword' ||
+            file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only images, PDFs, and Word documents are allowed.'), false);
+        }
+    }
+});
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -106,35 +139,75 @@ const authorizeAdmin = (req, res, next) => {
         res.status(403).json({ error: 'Forbidden: Admins only' });
     }
 };
+
 //1. register for franchise
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 app.post('/api/register', async (req, res) => {
   try {
-    const { franchise_name, location, phone_number, password } = req.body;
-    if (!franchise_name || !location || !phone_number || !password) {
+    const { full_name, email, franchise_name, location, phone_number, password } = req.body;
+    if (!full_name || !email || !franchise_name || !location || !phone_number || !password) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    const existing = await Franchisee.findOne({ franchise_name });
-    if (existing) {
+    const nameExists = await Franchisee.findOne({ franchise_name });
+    if (nameExists) {
       return res.status(400).json({ error: 'Franchise name already exists.' });
+    }
+
+    const emailExists = await Franchisee.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({ error: 'Email already exists.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const franchisee = new Franchisee({
+      full_name,
+      email,
       franchise_name,
       location,
       phone_number,
-      password: hashedPassword,
-      pending_approval: true
+      password: hashedPassword
     });
 
     await franchisee.save();
-    res.status(201).json({ message: 'Registration submitted. Awaiting admin approval.' });
+
+    // Send email to user
+    const mailOptionsUser = {
+      from: `"DipDips Franchise" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Registration Successful',
+      text: `Hello ${full_name},\n\nYour franchise registration was successful. You can now log in.\n\nThank you!`
+    };
+
+    // Send mail to admin
+    const mailOptionsAdmin = {
+      from: `"DipDips Franchise" <${process.env.EMAIL_USER}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: 'New Franchise Registration',
+      text: `New franchise registration:\n\nName: ${full_name}\nEmail: ${email}\nFranchise: ${franchise_name}\nLocation: ${location}\nPhone: ${phone_number}`
+    };
+
+    // Send both emails asynchronously
+    await Promise.all([
+      transporter.sendMail(mailOptionsUser),
+      transporter.sendMail(mailOptionsAdmin)
+    ]);
+
+    res.status(201).json({ message: 'Registration successful. You can now log in.' });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 });
+
+
 
 // 2. Login for franchisee
 app.post('/api/login', async (req, res) => {
@@ -154,15 +227,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid credentials.' });
     }
 
-    // ✳️ Check for account status
-    if (franchisee.status === 'pending') {
-      return res.status(403).json({ error: 'Account approval is still pending.' });
-    }
-    if (franchisee.status === 'rejected') {
-      return res.status(403).json({ error: 'Your registration has been rejected.' });
-    }
+    // Since you removed status and approval, no need to check here
 
-    // ✅ Login allowed for approved users
     const token = jwt.sign(
       { id: franchisee._id, role: 'franchisee' },
       JWT_SECRET,
@@ -409,7 +475,7 @@ app.post('/api/products', authenticateToken, async (req, res) => {
 
         res.status(201).json({ message: 'Product created successfully', product: newProduct });
     } catch (err) {
-        console.error('❌ Error creating product:', err.message);
+        console.error('Error creating product:', err.message);
         res.status(500).json({ error: 'Database error while creating product' });
     }
 });
@@ -914,7 +980,7 @@ app.get('/api/reports/sales', authenticateToken, async (req, res) => {
     }
 });
 
-
+// Search API
 app.get('/api/reports/sales', authenticateToken, async (req, res) => {
     try {
         const franchise_id = req.user.role === 'admin' ? req.query.franchise_id : req.user._id;
@@ -959,12 +1025,140 @@ app.get('/api/reports/sales', authenticateToken, async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ Error generating sales report:', err.message);
+        console.error('Error generating sales report:', err.message);
         res.status(500).json({ error: 'Failed to generate report' });
     }
 });
 
-// Search API
+// Vendor Profile API
+app.post('/api/vendor-profile', authenticateToken, upload.fields([
+    { name: 'profilePic', maxCount: 1 },
+    { name: 'aadharPhoto', maxCount: 1 },
+    { name: 'documents', maxCount: 10 }
+]), async (req, res) => {
+    try {
+        const {
+            fullName,
+            phoneNumber,
+            permanentAddress,
+            temporaryAddress,
+            emailAddress,
+            dateOfBirth,
+            aadharNumber,
+            gender,
+            qualification,
+            yearOfPassing,
+            institution,
+            workPeriod,
+            organization,
+            designation,
+            responsibilities,
+            criminalOffense,
+            followRules,
+            stallAddress,
+            existingStall,
+            signatureData
+        } = req.body;
+
+        // Validate required fields
+        if (!fullName || !phoneNumber || !permanentAddress || !emailAddress || 
+            !dateOfBirth || !aadharNumber || !gender || !stallAddress || 
+            !existingStall || !criminalOffense || !followRules || !signatureData) {
+            return res.status(400).json({ error: 'All required fields must be filled' });
+        }
+
+        // Validate Aadhar number format
+        if (!/^\d{12}$/.test(aadharNumber)) {
+            return res.status(400).json({ error: 'Aadhar number must be 12 digits' });
+        }
+
+        // Handle uploaded files
+        const documents = {};
+        if (req.files) {
+            if (req.files.profilePic) {
+                documents.profile_picture = req.files.profilePic[0].filename;
+            }
+            if (req.files.aadharPhoto) {
+                documents.aadhar_photo = req.files.aadharPhoto[0].filename;
+            }
+            if (req.files.documents) {
+                documents.additional_documents = req.files.documents.map(file => file.filename);
+            }
+        }
+
+        // Create vendor profile object
+        const vendorProfile = {
+            franchise_id: req.user._id,
+            personal_info: {
+                full_name: fullName,
+                phone_number: phoneNumber,
+                permanent_address: permanentAddress,
+                temporary_address: temporaryAddress || '',
+                email_address: emailAddress,
+                date_of_birth: new Date(dateOfBirth),
+                aadhar_number: aadharNumber,
+                gender: gender
+            },
+            education: qualification ? qualification.map((qual, index) => ({
+                qualification: qual,
+                year_of_passing: yearOfPassing[index],
+                institution: institution[index]
+            })) : [],
+            work_experience: workPeriod ? workPeriod.map((period, index) => ({
+                period: period,
+                organization: organization[index],
+                designation: designation[index],
+                responsibilities: responsibilities[index]
+            })) : [],
+            franchise_info: {
+                stall_address: stallAddress,
+                existing_stall: existingStall
+            },
+            declarations: {
+                criminal_offense: criminalOffense,
+                follow_rules: followRules
+            },
+            documents: documents,
+            signature_data: signatureData,
+            status: 'pending',
+            submitted_at: new Date()
+        };
+
+        // Save to database using the VendorProfile model
+        const profile = new VendorProfile(vendorProfile);
+        await profile.save();
+
+        res.json({ 
+            message: 'Vendor profile submitted successfully',
+            profile_id: profile._id 
+        });
+
+    } catch (err) {
+        console.error('Error submitting vendor profile:', err.message);
+        res.status(500).json({ error: 'Failed to submit vendor profile' });
+    }
+});
+
+// Error handling for file uploads
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+        }
+        if (error.code === 'LIMIT_FILE_COUNT') {
+            return res.status(400).json({ error: 'Too many files uploaded.' });
+        }
+        if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+            return res.status(400).json({ error: 'Unexpected file field.' });
+        }
+    }
+    if (error.message.includes('Invalid file type')) {
+        return res.status(400).json({ error: error.message });
+    }
+    next(error);
+});
+
+// Health check
 app.get('/api/search/products', authenticateToken, async (req, res) => {
     const { q } = req.query;
     if (!q) return res.json([]);
@@ -989,7 +1183,7 @@ app.get('/api/search/products', authenticateToken, async (req, res) => {
     }
 });
 
-// Health check
+
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString(), db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });

@@ -163,40 +163,58 @@
     </div>
 
     <!-- Registration Page -->
-    <div id="registrationPage" class="auth-page">
-      <div class="auth-container">
-        <div class="auth-header">
-          <h2>Register for Smart Billing</h2>
-          <p>Create your new account</p>
-        </div>
-        <div class="form-group">
-          <label for="regFranchise">Franchise Name</label>
-          <input type="text" id="regFranchise" placeholder="Enter franchise name" />
-        </div>
-        <div class="form-group">
-          <label for="regLocation">Location</label>
-          <input type="text" id="regLocation" placeholder="Enter location" />
-        </div>
-        <div class="form-group">
-          <label for="regPhone">Phone Number</label>
-          <input type="text" id="regPhone" placeholder="Enter phone number" />
-        </div>
-        <div class="form-group">
-          <label for="regPassword">Password</label>
-          <input type="password" id="regPassword" placeholder="Create a password" />
-        </div>
-        <div class="form-group">
-          <label for="regConfirmPassword">Confirm Password</label>
-          <input type="password" id="regConfirmPassword" placeholder="Confirm your password" />
-        </div>
-        <button class="btn-primary" onclick="handleRegistration()">Register</button>
-        <p class="auth-switch">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
-        <div id="registrationMessages" class="messages-container"></div>
-      </div>
+<div id="registrationPage" class="auth-page">
+  <div class="auth-container">
+    <div class="auth-header">
+      <h2>Register for Smart Billing</h2>
+      <p>Create your new account</p>
     </div>
 
+    <div class="form-group">
+      <label for="regFullName">Full Name</label>
+      <input type="text" id="regFullName" placeholder="Enter your full name" />
+    </div>
+
+    <div class="form-group">
+      <label for="regEmail">Email</label>
+      <input type="email" id="regEmail" placeholder="Enter your email address" />
+    </div>
+
+    <div class="form-group">
+      <label for="regFranchise">Franchise Name</label>
+      <input type="text" id="regFranchise" placeholder="Enter franchise name" />
+    </div>
+
+    <div class="form-group">
+      <label for="regLocation">Location</label>
+      <input type="text" id="regLocation" placeholder="Enter location" />
+    </div>
+
+    <div class="form-group">
+      <label for="regPhone">Phone Number</label>
+      <input type="text" id="regPhone" placeholder="Enter phone number" />
+    </div>
+
+    <div class="form-group">
+      <label for="regPassword">Password</label>
+      <input type="password" id="regPassword" placeholder="Create a password" />
+    </div>
+
+    <div class="form-group">
+      <label for="regConfirmPassword">Confirm Password</label>
+      <input type="password" id="regConfirmPassword" placeholder="Confirm your password" />
+    </div>
+
+    <button class="btn-primary" onclick="handleRegistration()">Register</button>
+    <p class="auth-switch">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+    <div id="registrationMessages" class="messages-container"></div>
+  </div>
+</div>
+
     <script>
-  function handleRegistration() {
+ function handleRegistration() {
+    const fullName = document.getElementById('regFullName').value;
+    const email = document.getElementById('regEmail').value;
     const franchise = document.getElementById('regFranchise').value;
     const location = document.getElementById('regLocation').value;
     const phone = document.getElementById('regPhone').value;
@@ -206,35 +224,59 @@
     const msg = document.getElementById('registrationMessages');
     msg.style.color = 'red';
 
-    if (!franchise || !location || !phone || !password || !confirmPassword) {
-      msg.textContent = 'All fields are required.';
-    } else if (password !== confirmPassword) {
-      msg.textContent = 'Passwords do not match.';
-    } else {
-      fetch('/api/register', {
+    if (!fullName || !email || !franchise || !location || !phone || !password || !confirmPassword) {
+        msg.textContent = 'All fields are required.';
+        return;
+    }
+
+    // Basic email pattern check
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        msg.textContent = 'Please enter a valid email address.';
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        msg.textContent = 'Passwords do not match.';
+        return;
+    }
+
+    fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          franchise_name: franchise,
-          location,
-          phone_number: phone,
-          password
+            full_name: fullName,
+            email: email,
+            franchise_name: franchise,
+            location: location,
+            phone_number: phone,
+            password: password
         })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            msg.style.color = 'red';
             msg.textContent = data.error;
-          } else {
+        } else {
             msg.style.color = 'green';
-            msg.textContent = 'Registration submitted. Awaiting admin approval.';
-          }
-        })
-        .catch(() => {
-          msg.textContent = 'Something went wrong.';
-        });
-    }
-  }
+            msg.textContent = 'Registration successful. You can now log in.';
+
+            // Optionally reset form fields after successful registration
+            document.getElementById('regFullName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regFranchise').value = '';
+            document.getElementById('regLocation').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+        }
+    })
+    .catch(() => {
+        msg.style.color = 'red';
+        msg.textContent = 'Something went wrong.';
+    });
+}
 
  function handleLogin() {
   const franchise = document.getElementById('loginFranchise').value;

@@ -41,7 +41,7 @@
           <li><a href="#" class="sales-report-btn" onclick="handleMobileSalesReport()">Sales Report</a></li>
           <li><a href="#" class="add-stock-btn" onclick="handleMobileStock()">Stock</a></li>
           <li><a href="#" class="start-billing-btn" onclick="handleMobileStartBilling()">Start Billing</a></li>
-          <li><a href="#" class="logout-btn" onclick="handleLogout()">Logout</a></li>
+          <li><a href="#" class="profile-btn" onclick="handleMobileProfile()">Profile</a></li>
         </div>
       </ul>
     </div>
@@ -62,14 +62,16 @@
         <li><a href="#" class="sales-report-btn" onclick="showSalesReport()">Sales Report</a></li>
         <li><a href="#" class="add-stock-btn" onclick="showStock()">Stock</a></li>
         <li><a href="#" class="start-billing-btn" onclick="showBillingApp()">Start Billing</a></li>
-        <li><a href="#" class="logout-btn" onclick="handleLogout()">Logout</a></li>
+        <li>
+        <button class="profile-btn" onclick="showProfile()">
+            <img src="/images/profile.jpg" alt="Profile" />
+        </button>
+        </li>
+
       </div>
     </ul>
   </div>
 </nav>
-
-
-
         <!-- Hero Section -->
         <section id="home" class="hero">
             <div class="hero-container">
@@ -527,6 +529,259 @@
         </div>
         
         <button class="btn" onclick="showHomePage()">Back to Home</button>
+    </div>
+
+    <!-- Profile Section -->
+    <div id="profileSection" class="app-section" style="display:none; padding: 2rem;">
+        <div class="section-header">
+            <h2>DipDips Vendor Profile</h2>
+            <p>Complete your vendor application form to become a DipDips franchisee</p>
+        </div>
+            <div class="profile-action-buttons" style="margin-bottom: 1.5rem;">
+            <button type="button" class="btn btn-secondary back-dashboard-btn" onclick="goToDashboard()">
+                ← Back to Dashboard
+            </button>
+            <button type="button" class="btn btn-danger logout-btn" onclick="logout()">
+                Logout
+            </button>
+            </div>
+
+
+
+        <form id="vendorProfileForm" class="vendor-form">
+            <!-- Section I: Personal Fact Sheet -->
+            <div class="form-section">
+                <h3>Section I: Personal Fact Sheet</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number *</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="permanentAddress">Permanent Address *</label>
+                    <textarea id="permanentAddress" name="permanentAddress" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="temporaryAddress">Temporary Address (if different from permanent)</label>
+                    <textarea id="temporaryAddress" name="temporaryAddress" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="emailAddress">Email Address *</label>
+                        <input type="email" id="emailAddress" name="emailAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth (DD/MM/YYYY) *</label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="aadharNumber">Aadhar Card Number *</label>
+                        <input type="text" id="aadharNumber" name="aadharNumber" pattern="[0-9]{12}" maxlength="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="male" required>
+                                <span>Male</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="female" required>
+                                <span>Female</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Educational Qualification -->
+                <div class="form-group">
+                    <label>Educational Qualification (beginning with the most recent) *</label>
+                    <div id="educationContainer">
+                        <div class="education-entry">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Qualification</label>
+                                    <input type="text" name="qualification[]" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Year of Passing</label>
+                                    <input type="number" name="yearOfPassing[]" min="1900" max="2030" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Name of Institution</label>
+                                    <input type="text" name="institution[]" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addEducationEntry()">+ Add More Education</button>
+                </div>
+
+                <!-- Previous Work Experience -->
+                <div class="form-group">
+                    <label>Previous Work Experience (if applicable)</label>
+                    <div id="experienceContainer">
+                        <div class="experience-entry">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Period</label>
+                                    <input type="text" name="workPeriod[]" placeholder="e.g., 2020-2022">
+                                </div>
+                                <div class="form-group">
+                                    <label>Organization</label>
+                                    <input type="text" name="organization[]">
+                                </div>
+                                <div class="form-group">
+                                    <label>Designation</label>
+                                    <input type="text" name="designation[]">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Responsibilities</label>
+                                <textarea name="responsibilities[]" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addExperienceEntry()">+ Add More Experience</button>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Have you ever been convicted of a criminal offense? *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="criminalOffense" value="yes" required>
+                                <span>Yes</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="criminalOffense" value="no" required>
+                                <span>No</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Are you ready to follow the rules and instructions given by DipDips? *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="followRules" value="yes" required>
+                                <span>Yes</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="followRules" value="no" required>
+                                <span>No</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section II: The Proposed Franchise -->
+            <div class="form-section">
+                <h3>Section II: The Proposed Franchise</h3>
+                
+                <div class="form-group">
+                    <label for="stallAddress">Stall Address *</label>
+                    <textarea id="stallAddress" name="stallAddress" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Do you have a stall already running? *</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="existingStall" value="yes" required>
+                            <span>Yes</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="existingStall" value="no" required>
+                            <span>No</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Upload Section -->
+            <div class="form-section">
+                <h3>Document Upload</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profilePic">Profile Picture *</label>
+                        <input type="file" id="profilePic" name="profilePic" accept="image/*" required>
+                        <div class="file-preview" id="profilePicPreview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="aadharPhoto">Aadhar Card Photo *</label>
+                        <input type="file" id="aadharPhoto" name="aadharPhoto" accept="image/*" required>
+                        <div class="file-preview" id="aadharPhotoPreview"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="documents">Additional Documents</label>
+                    <input type="file" id="documents" name="documents" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <div class="file-preview" id="documentsPreview"></div>
+                </div>
+            </div>
+
+            <!-- Digital Signature -->
+            <div class="form-section">
+                <h3>Digital Signature</h3>
+                <div class="form-group">
+                    <label for="digitalSignature">Digital Signature *</label>
+                    <canvas id="signatureCanvas" width="400" height="200" style="border: 2px dashed #ccc; cursor: crosshair;"></canvas>
+                    <div class="signature-actions">
+                        <button type="button" class="btn btn-secondary" onclick="clearSignature()">Clear Signature</button>
+                        <button type="button" class="btn btn-secondary" onclick="saveSignature()">Save Signature</button>
+                    </div>
+                    <input type="hidden" id="signatureData" name="signatureData">
+                </div>
+            </div>
+
+            <!-- Privacy Policy -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="privacyPolicy" name="privacyPolicy" required>
+                        <span>I agree to the <a href="#" onclick="showPrivacyPolicy()">Privacy Policy</a> and terms of service *</span>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="button" class="btn" onclick="showHomePage()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Application</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Application Submitted Successfully!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Thank you for submitting your DipDips vendor application. Our admin team will review your details and contact you soon.</p>
+                <p>You will receive updates via email and phone regarding the status of your application.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeSuccessModal()">OK</button>
+            </div>
+        </div>
     </div>
 
     <!-- <script src="/js/script.js"></script> -->
